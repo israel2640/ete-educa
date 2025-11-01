@@ -16,7 +16,9 @@
       "badges": [],
       "simulados": 0
     },
-    "reforco": [],
+    "reforco": [
+      "POR_01"
+    ],
     "nivel": "Bronze"
   }
 }
