@@ -1,0 +1,125 @@
+{
+  "user": "aluna1",
+  "nivel": "Bronze",
+  "acertos": 1,
+  "erros": 1,
+  "ultima_atualizacao": "2025-10-31",
+  "materias": {
+    "Português": {
+      "acertos": 0,
+      "erros": 1
+    },
+    "Matemática": {
+      "acertos": 0,
+      "erros": 0
+    }
+  },
+  "usuario": "aluna1",
+  "aluna1": {
+    "portugues": {
+      "badges": [
+        "POR_01",
+        "POR_02"
+      ],
+      "treinos_ok": 0,
+      "erros": [],
+      "plano": {
+        "1": false,
+        "2": false,
+        "3": false,
+        "4": false,
+        "5": false,
+        "6": false,
+        "7": false,
+        "8": false,
+        "9": false,
+        "10": false,
+        "11": false,
+        "12": false,
+        "13": false,
+        "14": false
+      },
+      "simulados": 2
+    },
+    "matematica": {
+      "badges": [],
+      "treinos_ok": 0,
+      "simulados": 2
+    },
+    "reforco": [
+      "POR_01"
+    ],
+    "plano": [
+      {
+        "dia": 1,
+        "materia": "Português",
+        "tema": "Concordância verbal"
+      },
+      {
+        "dia": 2,
+        "materia": "Matemática",
+        "tema": "Equações do 1º grau"
+      },
+      {
+        "dia": 3,
+        "materia": "Português",
+        "tema": "Interpretação de texto"
+      },
+      {
+        "dia": 4,
+        "materia": "Matemática",
+        "tema": "Porcentagem"
+      },
+      {
+        "dia": 5,
+        "materia": "Português",
+        "tema": "Sinais de pontuação"
+      },
+      {
+        "dia": 6,
+        "materia": "Matemática",
+        "tema": "Porcentagem"
+      },
+      {
+        "dia": 7,
+        "materia": "Português",
+        "tema": "Figuras de linguagem"
+      },
+      {
+        "dia": 8,
+        "materia": "Matemática",
+        "tema": "Gráficos e tabelas"
+      },
+      {
+        "dia": 9,
+        "materia": "Português",
+        "tema": "Interpretação de texto"
+      },
+      {
+        "dia": 10,
+        "materia": "Matemática",
+        "tema": "Equações do 1º grau"
+      },
+      {
+        "dia": 11,
+        "materia": "Português",
+        "tema": "Sinais de pontuação"
+      },
+      {
+        "dia": 12,
+        "materia": "Matemática",
+        "tema": "Geometria plana"
+      },
+      {
+        "dia": 13,
+        "materia": "Português",
+        "tema": "Ideia principal"
+      },
+      {
+        "dia": 14,
+        "materia": "Matemática",
+        "tema": "Porcentagem"
+      }
+    ]
+  }
+}

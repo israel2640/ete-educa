@@ -1,0 +1,67 @@
+{
+  "title": "Simulado Chefão — ETE Integrado",
+  "time_minutes": 60,
+  "questions": [
+    {
+      "subject": "portugues",
+      "q": "A ideia principal é:",
+      "opts": [
+        "o núcleo da mensagem",
+        "um exemplo",
+        "uma curiosidade",
+        "um detalhe"
+      ],
+      "ans": "o núcleo da mensagem",
+      "exp": "Centro organizador."
+    },
+    {
+      "subject": "portugues",
+      "q": "Os dois-pontos podem introduzir:",
+      "opts": [
+        "contraste",
+        "explicação/fala",
+        "advérbio",
+        "redundância"
+      ],
+      "ans": "explicação/fala",
+      "exp": "Apresentam o que vem a seguir."
+    },
+    {
+      "subject": "matematica",
+      "q": "15% de 80 =",
+      "opts": [
+        "10",
+        "12",
+        "14",
+        "16",
+        "20"
+      ],
+      "ans": "12",
+      "exp": "0,15×80."
+    },
+    {
+      "subject": "matematica",
+      "q": "Equivalente a 1/2:",
+      "opts": [
+        "2/3",
+        "3/5",
+        "4/8",
+        "5/7"
+      ],
+      "ans": "4/8",
+      "exp": "Simplifica por 4."
+    },
+    {
+      "subject": "matematica",
+      "q": "Numa escola com 3990 alunos, 3/10 natação e 2/7 vôlei (sem interseção). Não praticam:",
+      "opts": [
+        "1140",
+        "1197",
+        "1653",
+        "2337"
+      ],
+      "ans": "1653",
+      "exp": "Sobra 3990 - (1197+1140)."
+    }
+  ]
+}
