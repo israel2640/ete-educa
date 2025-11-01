@@ -64,6 +64,8 @@ if total == 0:
 respostas_usuario = {}
 
 with st.form("treino_form"):
+    st.warning("Lembre-se de clicar no CÍRCULO ao lado da opção para selecionar sua resposta.")
+    
     for i, q in enumerate(train_questions, start=1):
         st.markdown(f"**{i}. {q['q']}**")
         opts = shuffled_options(q["opts"])
@@ -77,12 +79,17 @@ with st.form("treino_form"):
 # ====== Finalização (Fora do formulário) ======
 if submitted:
     corrects = 0
+    all_answered = True
+    
     # Processar respostas
     for key, (resposta_aluna, gabarito, explicacao) in respostas_usuario.items():
         
-        # --- CORREÇÃO DO BUG DE COMPARAÇÃO ---
-        # Limpa espaços em branco antes de comparar
-        if resposta_aluna is not None and resposta_aluna.strip() == gabarito.strip():
+        # --- CORREÇÃO: VERIFICA SE A RESPOSTA É NULA ---
+        if resposta_aluna is None:
+            st.error(f"❌ Questão '{key}' não foi respondida! Você precisa clicar no círculo.")
+            all_answered = False
+        
+        elif resposta_aluna.strip() == gabarito.strip():
         # --- FIM DA CORREÇÃO ---
             st.success(f"✅ Questão '{key}' correta! {explicacao}")
             corrects += 1
@@ -92,20 +99,21 @@ if submitted:
             
     st.divider()
     
-    # --- CORREÇÃO DO BUG DE APROVAÇÃO (0/1) ---
-    # Mínimo de 1 acerto, ou 70%
-    min_acertos = max(1, int(total * 0.7)) 
-    # --- FIM DA CORREÇÃO ---
-
-    if corrects >= min_acertos:
-        set_train_ok(progress, user, materia_key, lesson["id"])
-        st.success(f"🏆 Treino aprovado! ({corrects}/{total})")
-        st.balloons()
+    if not all_answered:
+        st.warning("Parece que você não respondeu todas as perguntas. Tente novamente.")
     else:
-        add_reforco(progress, user, lesson["id"]) # Adiciona ao 'reforco'
-        st.warning(f"⚠️ Treino não aprovado. ({corrects}/{total}) Este tema foi adicionado ao modo 'Reforço' para revisão.")
-    
-    save_progress(progress) # Salva o resultado no GitHub
+        # Mínimo de 1 acerto, ou 70%
+        min_acertos = max(1, int(total * 0.7)) 
+
+        if corrects >= min_acertos:
+            set_train_ok(progress, user, materia_key, lesson["id"])
+            st.success(f"🏆 Treino aprovado! ({corrects}/{total})")
+            st.balloons()
+        else:
+            add_reforco(progress, user, lesson["id"]) # Adiciona ao 'reforco'
+            st.warning(f"⚠️ Treino não aprovado. ({corrects}/{total}) Este tema foi adicionado ao modo 'Reforço' para revisão.")
+        
+        save_progress(progress) # Salva o resultado no GitHub
 
 # ====== Indicador de progresso ======
 if materia_key not in progress[user]:
