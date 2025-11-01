@@ -207,3 +207,14 @@ def load_lessons():
         except ImportError:
             return [] 
     return ALL_LESSONS
+
+def delete_user(progress, user):
+    """Remove um usuário do dicionário de progresso."""
+    if user in progress:
+        try:
+            progress.pop(user)
+            return True, f"Perfil '{user}' deletado com sucesso."
+        except Exception as e:
+            return False, f"Erro ao deletar perfil: {e}"
+    else:
+        return False, "Usuário não encontrado."

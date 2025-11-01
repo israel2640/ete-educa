@@ -2,7 +2,7 @@ import streamlit as st
 import random, base64, time
 import unicodedata 
 from data.simulado_loader import gerar_prova 
-from engine import load_progress, save_progress, ensure_user 
+from engine import load_progress, save_progress, ensure_user, add_reforco
 
 # ====== Configuração ======
 st.set_page_config(page_title="⏱️ Desafiar — ETE Educa", page_icon="⏱️", layout="centered")
@@ -20,13 +20,15 @@ if "fase" not in st.session_state:
 
 progress = load_progress()
 
-# --- CORREÇÃO AQUI ---
-# Pega o nome do usuário do 'user_input' da página principal
-if "user_input" not in st.session_state:
-    st.session_state.user_input = "aluna1" 
-user = st.session_state.user_input # Lê a chave correta
-st.info(f"Aluna: **{user}**") 
-# --- FIM DA CORREÇÃO ---
+# --- NOVO BLOCO DE VERIFICAÇÃO DE PERFIL ---
+if "user" not in st.session_state or not st.session_state.user:
+    st.error("Ops! Você precisa selecionar ou criar um perfil na página principal (🎓 ETE_Educa v4) primeiro.")
+    st.warning("Por favor, retorne à página principal para fazer o login.")
+    st.stop() # Para a execução da página
+
+user = st.session_state.user
+st.info(f"Aluno(a) logado: **{user}**") # Mostra quem está logado
+
 
 ensure_user(progress, user)
 
@@ -91,18 +93,31 @@ elif st.session_state.fase == "questao":
         st.session_state.fase = "resultado"
         st.rerun()
 
-# --- Fase de Feedback ---
+# --- Fase de Feedback (COM LÓGICA DE REFORÇO) ---
 elif st.session_state.fase == "feedback_simulado":
     st.subheader(f"Questão {st.session_state.q_atual + 1}/{len(st.session_state.questoes)}")
+    
+    # Pega a lição correspondente a esta questão
+    q = st.session_state.questoes[st.session_state.q_atual]
+    lesson_id = q.get("lesson_id") # Pega o ID que mapeamos
+    
     if "✅" in st.session_state.feedback:
         st.success(st.session_state.feedback)
     else:
         st.error(st.session_state.feedback)
+        
+        # --- AQUI ESTÁ A LÓGICA QUE FALTAVA ---
+        if lesson_id:
+            # 'user' foi definido no bloco de login
+            add_reforco(progress, user, lesson_id) 
+            save_progress(progress)
+            st.warning(f"💡 Esta lição ({q.get('tema')}) foi adicionada ao seu '🧠 Reforço' para revisão!")
+        # --- FIM DA LÓGICA QUE FALTAVA ---
     
     if st.button("Próxima Questão ➡️"):
         st.session_state.q_atual += 1
         st.session_state.fase = "questao"
-        st.session_state.feedback = "" 
+        st.session_state.feedback = "" # Limpa o feedback
         st.rerun()
 
 

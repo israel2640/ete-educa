@@ -16,13 +16,15 @@ st.caption("Aprenda os principais temas do edital da ETE com explicações da IA
 # =====================================================
 progress = load_progress()
 
-# --- CORREÇÃO AQUI ---
-# Pega o nome do usuário do 'user_input' da página principal (app.py)
-if "user_input" not in st.session_state:
-    st.session_state.user_input = "aluna1" # Garante um valor padrão
-user = st.session_state.user_input # Lê a chave correta
-st.info(f"Aluna: **{user}**") # Mostra qual aluna está logada
-# --- FIM DA CORREÇÃO ---
+# --- NOVO BLOCO DE VERIFICAÇÃO DE PERFIL ---
+if "user" not in st.session_state or not st.session_state.user:
+    st.error("Ops! Você precisa selecionar ou criar um perfil na página principal (🎓 ETE_Educa v4) primeiro.")
+    st.warning("Por favor, retorne à página principal para fazer o login.")
+    st.stop() # Para a execução da página
+
+user = st.session_state.user
+st.info(f"Aluno(a) logado: **{user}**") # Mostra quem está logado
+
 
 ensure_user(progress, user)
 

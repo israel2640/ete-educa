@@ -41,20 +41,22 @@ def check_answer():
     # Marca que esta pergunta foi respondida
     st.session_state.treino_answered = True
 
-# ==================================
-# 🔹 Carregar dados
-# ==================================
+# ====== Carregar dados ======
 lessons = load_lessons()
 progress = load_progress()
 
-if "user_input" not in st.session_state:
-    st.session_state.user_input = "aluna1" 
-user = st.session_state.user_input 
-st.info(f"Aluna: **{user}**") 
+# --- NOVO BLOCO DE VERIFICAÇÃO DE PERFIL ---
+if "user" not in st.session_state or not st.session_state.user:
+    st.error("Ops! Você precisa selecionar ou criar um perfil na página principal (🎓 ETE_Educa v4) primeiro.")
+    st.warning("Por favor, retorne à página principal para fazer o login.")
+    st.stop() # Para a execução da página
 
-ensure_user(progress, user)
+user = st.session_state.user
+st.info(f"Aluno(a) logado: **{user}**") # Mostra quem está logado
+ensure_user(progress, user) # Garante que o usuário ainda existe no JSON
+# --- FIM DO NOVO BLOCO ---
 
-materia = st.selectbox("Matéria", ["Português", "Matemática"], index=0, key="treino_materia")
+materia = st.selectbox("Matéria", ["Português", "Matemática"], index=0)
 materia_key = normalizar_materia(materia)
 
 subs = [l for l in lessons if l.get("subject", "").lower() == materia_key]
