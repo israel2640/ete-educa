@@ -156,17 +156,27 @@ def save_progress(progress: Dict):
         print(f"Erro ao salvar progresso no GitHub: {e}")
 
 # Garante que o usuário exista no dicionário de progresso
-def ensure_user(progress, user):
+def ensure_user(progress, user, password):
+    """Garante que o usuário exista no progresso, agora com senha."""
     if user not in progress:
-        progress[user] = DEFAULT_USER_PROGRESS.get("aluna1", {}).copy()
+        progress[user] = {
+            "password": password, # <--- ADICIONADO
+            "portugues": {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0},
+            "matematica": {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0},
+            "reforco": [],
+            "plano_14_dias": {str(dia+1): False for dia in range(14)} # <--- CORRIGIDO (plano_14_dias)
+        }
     
-    # Garante que as chaves de matéria existam
+    # Garante que as chaves de matéria existam (para perfis antigos)
     if "portugues" not in progress[user]:
          progress[user]["portugues"] = {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0}
     if "matematica" not in progress[user]:
         progress[user]["matematica"] = {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0}
     if "reforco" not in progress[user]:
         progress[user]["reforco"] = []
+    # Garante que o plano exista (corrigido do seu arquivo anterior)
+    if "plano_14_dias" not in progress[user]:
+        progress[user]["plano_14_dias"] = {str(dia+1): False for dia in range(14)}
         
     return progress
 
@@ -208,13 +218,36 @@ def load_lessons():
             return [] 
     return ALL_LESSONS
 
-def delete_user(progress, user):
-    """Remove um usuário do dicionário de progresso."""
-    if user in progress:
-        try:
-            progress.pop(user)
-            return True, f"Perfil '{user}' deletado com sucesso."
-        except Exception as e:
-            return False, f"Erro ao deletar perfil: {e}"
-    else:
+def delete_user(progress, user, password):
+    """Remove um usuário do dicionário de progresso, se a senha estiver correta."""
+    if user not in progress:
         return False, "Usuário não encontrado."
+        
+    saved_password = progress[user].get("password")
+    if not saved_password:
+        return False, "Perfil antigo sem senha, não pode ser deletado."
+    
+    if password != saved_password:
+        return False, "Senha incorreta. Você só pode deletar seu próprio perfil."
+
+    # Se a senha estiver correta, deleta
+    try:
+        progress.pop(user)
+        return True, f"Perfil '{user}' deletado com sucesso."
+    except Exception as e:
+        return False, f"Erro ao deletar perfil: {e}"
+    
+
+def check_user_login(progress, user, password):
+    """Verifica se o usuário existe e a senha está correta."""
+    if user not in progress:
+        return False, "Usuário não encontrado."
+    
+    saved_password = progress[user].get("password")
+    if not saved_password:
+        return False, "Este perfil é antigo e não tem senha. Por favor, crie um novo."
+
+    if password == saved_password:
+        return True, "Login com sucesso."
+    else:
+        return False, "Senha incorreta."
