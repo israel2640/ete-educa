@@ -1,46 +1,50 @@
 {
-  "aluna1": {
+  "Bianca": {
     "portugues": {
-      "treinos_ok": 5,
+      "treinos_ok": 0,
       "erros": [],
-      "badges": [
-        "POR_01",
-        "POR_02",
-        "POR_03",
-        "POR_04",
-        "POR_10",
-        "POR_05",
-        "POR_07"
-      ],
-      "simulados": 0,
-      "plano": {
-        "1": true,
-        "2": false,
-        "3": false,
-        "4": false,
-        "5": false,
-        "6": false,
-        "7": false,
-        "8": false,
-        "9": false,
-        "10": false,
-        "11": false,
-        "12": false,
-        "13": false,
-        "14": false
-      }
+      "badges": [],
+      "simulados": 0
     },
     "matematica": {
       "treinos_ok": 0,
       "erros": [],
-      "badges": [
-        "MAT_01"
-      ],
-      "simulados": 1
+      "badges": [],
+      "simulados": 0
     },
-    "reforco": [
-      "POR_03"
-    ],
+    "reforco": [],
+    "nivel": "Bronze",
+    "plano_14_dias": {
+      "1": false,
+      "2": false,
+      "3": false,
+      "4": false,
+      "5": false,
+      "6": false,
+      "7": false,
+      "8": false,
+      "9": false,
+      "10": false,
+      "11": false,
+      "12": false,
+      "13": false,
+      "14": false
+    }
+  },
+  "Israel": {
+    "portugues": {
+      "treinos_ok": 0,
+      "erros": [],
+      "badges": [],
+      "simulados": 0
+    },
+    "matematica": {
+      "treinos_ok": 0,
+      "erros": [],
+      "badges": [],
+      "simulados": 0
+    },
+    "reforco": [],
     "nivel": "Bronze"
   }
 }
