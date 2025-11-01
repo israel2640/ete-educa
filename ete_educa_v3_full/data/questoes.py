@@ -258,7 +258,7 @@ questoes_matematica = [
         "subject": "matematica",
         "title": "Problemas com as Quatro Operações",
         "lesson_text": "São a base de tudo: Adição (+), Subtração (-), Multiplicação (*) e Divisão (/). A chave é ler o problema e entender qual operação usar.",
-        "example": "João comprou 3 cadernos por R$ 7,80 cada. Ele pagou com uma nota de R$ 50,00. Quanto ele recebeu de troco?\n1º (Multiplicação): 3 * 7,80 = R$ 23,40 (custo total).\n2º (Subtração): 50,00 - 23,40 = R$ 26,60 (troco).",
+        "example": "João comprou 3 cadernos por R\$ 7,80 cada. Ele pagou com uma nota de R\$ 50,00. Quanto ele recebeu de troco?\n1º (Multiplicação): 3 * 7,80 = R\$ 23,40 (custo total).\n2º (Subtração): 50,00 - 23,40 = R\$ 26,60 (troco)."
         "train_questions": [
             {
                 "q": "Maria tem 30 balas. Ela deu 5 para seu irmão e dividiu o restante igualmente entre seus 5 amigos. Quantas balas cada amigo ganhou?",
