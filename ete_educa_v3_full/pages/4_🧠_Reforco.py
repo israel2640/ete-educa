@@ -8,22 +8,28 @@ from engine import load_lessons, load_progress, save_progress, ensure_user
 st.set_page_config(page_title="🧠 Reforço — ETE Educa", page_icon="🧠", layout="centered")
 st.header("🧠 Reforço — Revise o que errou e domine o conteúdo!")
 
-# ====== CORREÇÃO: Função auxiliar padronizada ======
+# ====== Função auxiliar padronizada ======
 def normalizar_materia(nome: str) -> str:
     """Remove acentos e padroniza para minúsculas."""
     return ''.join(
         c for c in unicodedata.normalize('NFD', nome.lower())
         if unicodedata.category(c) != 'Mn'
     )
-# --- FIM DA CORREÇÃO ---
 
 # ==========================
 # 🔹 Carregar dados
 # ==========================
 lessons = load_lessons()
 progress = load_progress()
-usuario = st.text_input("Aluno(a):", value="aluna1")
-ensure_user(progress, usuario)
+
+# --- CORREÇÃO: Pega o nome do usuário da sessão ---
+if "user" not in st.session_state:
+    st.session_state.user = "aluna1" # Garante um valor padrão
+user = st.session_state.user
+st.info(f"Aluna: **{user}**") # Mostra qual aluna está logada
+# --- FIM DA CORREÇÃO ---
+
+ensure_user(progress, user)
 
 materia = st.selectbox("Matéria", ["Português", "Matemática"], index=0)
 materia_key = normalizar_materia(materia)
@@ -31,8 +37,7 @@ materia_key = normalizar_materia(materia)
 # ==========================
 # 🔹 Carregar lista de reforço
 # ==========================
-# CORRIGIDO: Carregar a lista de reforço global do usuário
-lista_reforco_ids = progress[usuario].get("reforco", [])
+lista_reforco_ids = progress[user].get("reforco", [])
 
 if not lista_reforco_ids:
     st.success("🎉 Nenhum tema pendente! Você está indo muito bem!")

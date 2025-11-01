@@ -1,6 +1,6 @@
 import streamlit as st
 import random, base64, time
-import unicodedata # <--- Importar
+import unicodedata 
 from data.simulado_loader import gerar_prova 
 from engine import load_progress, save_progress, ensure_user 
 
@@ -16,20 +16,26 @@ if "fase" not in st.session_state:
     st.session_state.q_atual = 0
     st.session_state.acertos = 0
     st.session_state.erros = 0
-    st.session_state.feedback = "" # NOVO: Para guardar o feedback
+    st.session_state.feedback = "" 
 
 progress = load_progress()
-usuario = st.text_input("Nome da aluna(o):", value="aluna1")
-ensure_user(progress, usuario)
 
-# ====== CORREÇÃO: Função auxiliar padronizada ======
+# --- CORREÇÃO: Pega o nome do usuário da sessão ---
+if "user" not in st.session_state:
+    st.session_state.user = "aluna1" # Garante um valor padrão
+user = st.session_state.user
+st.info(f"Aluna: **{user}**") # Mostra qual aluna está logada
+# --- FIM DA CORREÇÃO ---
+
+ensure_user(progress, user)
+
+# ====== Função auxiliar padronizada ======
 def normalizar_materia(nome: str) -> str:
     """Remove acentos e padroniza para minúsculas."""
     return ''.join(
         c for c in unicodedata.normalize('NFD', nome.lower())
         if unicodedata.category(c) != 'Mn'
     )
-# --- FIM DA CORREÇÃO ---
 
 # ====== Fase 1: Seleção ======
 if st.session_state.fase == "inicio":
@@ -54,16 +60,19 @@ elif st.session_state.fase == "questao":
     if st.session_state.q_atual < len(st.session_state.questoes):
         q = st.session_state.questoes[st.session_state.q_atual]
         st.subheader(f"Questão {st.session_state.q_atual + 1}/{len(st.session_state.questoes)} — {q['tema']}")
+        
+        if "texto_contexto" in q:
+            with st.expander("Ver Texto de Apoio (Poema/Texto)"):
+                st.markdown(q["texto_contexto"])
+        
         st.markdown(q["pergunta"])
         
-        # Garante que alternativas existam
         if "alternativas" not in q or not q["alternativas"]:
             st.error("Erro: Questão sem alternativas cadastradas.")
             st.session_state.q_atual += 1 # Pula questão
         else:
             resposta = st.radio("Escolha sua resposta:", q["alternativas"], key=f"resp_{st.session_state.q_atual}", index=None)
 
-            # --- LÓGICA DE RESPOSTA MODIFICADA ---
             if st.button("Responder"):
                 if resposta == q["correta"]:
                     st.session_state.acertos += 1
@@ -75,13 +84,13 @@ elif st.session_state.fase == "questao":
                         f"**Explicação:** {q.get('explicacao', 'Leia novamente este tema no modo Estudar.')}"
                     )
                 
-                st.session_state.fase = "feedback_simulado" # Muda para a nova fase
-                st.rerun() # Recarrega para mostrar o feedback
+                st.session_state.fase = "feedback_simulado" 
+                st.rerun() 
     else:
         st.session_state.fase = "resultado"
         st.rerun()
 
-# --- NOVA FASE DE FEEDBACK ---
+# --- Fase de Feedback ---
 elif st.session_state.fase == "feedback_simulado":
     st.subheader(f"Questão {st.session_state.q_atual + 1}/{len(st.session_state.questoes)}")
     if "✅" in st.session_state.feedback:
@@ -92,7 +101,7 @@ elif st.session_state.fase == "feedback_simulado":
     if st.button("Próxima Questão ➡️"):
         st.session_state.q_atual += 1
         st.session_state.fase = "questao"
-        st.session_state.feedback = "" # Limpa o feedback
+        st.session_state.feedback = "" 
         st.rerun()
 
 
@@ -104,7 +113,8 @@ elif st.session_state.fase == "resultado":
     if total == 0:
         st.warning("Nenhuma questão foi respondida.")
         st.session_state.fase = "inicio"
-        st.button("Voltar")
+        if st.button("Voltar"):
+            st.rerun()
         
     else:
         st.write(f"✅ Acertos: {st.session_state.acertos}")
@@ -127,14 +137,12 @@ elif st.session_state.fase == "resultado":
         else:
             st.warning("📘 Continue estudando as lições e refaça o simulado para subir de nível.")
 
-        # --- ESTA É A CORREÇÃO DEFINITIVA ---
         materia_key = normalizar_materia(st.session_state.materia)
-        # --- FIM DA CORREÇÃO ---
         
-        if usuario not in progress:
-             ensure_user(progress, usuario) # Garante que existe
+        if user not in progress:
+             ensure_user(progress, user) 
              
-        progress[usuario][materia_key]["simulados"] = progress[usuario][materia_key].get("simulados", 0) + 1
+        progress[user][materia_key]["simulados"] = progress[user][materia_key].get("simulados", 0) + 1
         save_progress(progress)
 
         if st.button("🔁 Refazer Simulado"):

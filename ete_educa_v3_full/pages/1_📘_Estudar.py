@@ -15,8 +15,13 @@ st.caption("Aprenda os principais temas do edital da ETE com explicações da IA
 # 🔹 Carregar dados de progresso e usuário
 # =====================================================
 progress = load_progress()
-# O usuário é pego da tela principal
-user = st.session_state.get("user", "aluna1") 
+
+# Pega o nome do usuário que foi definido na página principal (app.py)
+if "user" not in st.session_state:
+    st.session_state.user = "aluna1" # Garante um valor padrão
+user = st.session_state.user
+st.info(f"Aluna: **{user}**") # Mostra qual aluna está logada
+
 ensure_user(progress, user)
 
 # =====================================================
@@ -33,12 +38,28 @@ else:
 engine = QuizEngine(questoes)
 
 # =====================================================
-# 🔹 Inicialização de estado
+# 🔹 Inicialização de estado (COM A CORREÇÃO)
 # =====================================================
 # Reinicia o progresso se a matéria mudar
 if "materia_anterior" not in st.session_state or st.session_state.materia_anterior != materia:
     st.session_state.fase = "aula"
-    st.session_state.questao_atual = 0
+    
+    # --- CORREÇÃO AQUI ---
+    # Verifica o progresso salvo para saber qual é a lição atual
+    # Pega os 'badges' (lições feitas) que estão salvos no GitHub
+    badges_estudados = progress[user][materia_key].get("badges", [])
+    
+    # Pega os IDs de todas as lições desta matéria
+    ids_licoes_materia = [q["id"] for q in questoes]
+    
+    # Conta quantos badges desta matéria o usuário já tem
+    licoes_ja_feitas = [badge for badge in badges_estudados if badge in ids_licoes_materia]
+    
+    # Define a questão atual como o número de lições já feitas
+    # Se ela fez 2 lições, a contagem é 2, e ela começará na lição de índice 2 (a 3ª lição)
+    st.session_state.questao_atual = len(licoes_ja_feitas)
+    # --- FIM DA CORREÇÃO ---
+
     st.session_state.feedback = ""
     st.session_state.acertos = 0
     st.session_state.erros = 0
@@ -52,6 +73,10 @@ if st.session_state.questao_atual >= len(questoes):
     st.balloons()
     st.session_state.fase = "final"
     if st.button("Recomeçar?"):
+        # Se recomeçar, limpa o progresso DESSA MATÉRIA
+        progress[user][materia_key]["badges"] = []
+        progress[user][materia_key]["treinos_ok"] = 0
+        save_progress(progress)
         st.session_state.questao_atual = 0
         st.session_state.fase = "aula"
         st.rerun()
@@ -120,11 +145,9 @@ else:
                     else:
                         st.session_state.erros += 1
                     
-                    # *** CORREÇÃO CRÍTICA ***
                     # Marca a lição como 'estudada' para liberar o treino
                     set_studied(progress, user, materia_key, questao["id"])
-                    save_progress(progress)
-                    # *** FIM DA CORREÇÃO ***
+                    save_progress(progress) # Salva no GitHub
                     
                     st.session_state.fase = "feedback"
                     st.rerun()
@@ -143,16 +166,14 @@ else:
             st.rerun()
 
 # =====================================================
-# 🔹 Rodapé de progresso (COM A CORREÇÃO)
+# 🔹 Rodapé de progresso
 # =====================================================
 st.divider()
 total_licoes = len(questoes)
 if total_licoes > 0:
-    # --- ESTA É A LINHA CORRIGIDA ---
     progresso_percentual = (st.session_state.questao_atual / total_licoes)
 else:
     progresso_percentual = 0
 
 st.markdown(f"**Progresso:** {st.session_state.questao_atual}/{total_licoes} lições estudadas.")
-# Adicionamos min(..., 1.0) por segurança, para nunca passar de 1.0
 st.progress(min(progresso_percentual, 1.0))
