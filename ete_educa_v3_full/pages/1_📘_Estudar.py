@@ -16,11 +16,13 @@ st.caption("Aprenda os principais temas do edital da ETE com explicações da IA
 # =====================================================
 progress = load_progress()
 
-# Pega o nome do usuário que foi definido na página principal (app.py)
-if "user" not in st.session_state:
-    st.session_state.user = "aluna1" # Garante um valor padrão
-user = st.session_state.user
+# --- CORREÇÃO AQUI ---
+# Pega o nome do usuário do 'user_input' da página principal (app.py)
+if "user_input" not in st.session_state:
+    st.session_state.user_input = "aluna1" # Garante um valor padrão
+user = st.session_state.user_input # Lê a chave correta
 st.info(f"Aluna: **{user}**") # Mostra qual aluna está logada
+# --- FIM DA CORREÇÃO ---
 
 ensure_user(progress, user)
 
@@ -37,13 +39,33 @@ else:
 
 engine = QuizEngine(questoes)
 
-# --- INICIALIZAÇÃO DE ESTADO ---
-# Se 'fase' não existir, crie-a
-if "fase" not in st.session_state:
+# =====================================================
+# 🔹 Inicialização de estado (COM A CORREÇÃO)
+# =====================================================
+# Reinicia o progresso se a matéria mudar
+if "materia_anterior" not in st.session_state or st.session_state.materia_anterior != materia:
     st.session_state.fase = "aula"
-# Se 'selected_lesson_id' não existir, crie-a
-if "selected_lesson_id" not in st.session_state:
-    st.session_state.selected_lesson_id = None
+    
+    # --- CORREÇÃO AQUI ---
+    # Verifica o progresso salvo para saber qual é a lição atual
+    # Pega os 'badges' (lições feitas) que estão salvos no GitHub
+    badges_estudados = progress[user].get(materia_key, {}).get("badges", [])
+    
+    # Pega os IDs de todas as lições desta matéria
+    ids_licoes_materia = [q["id"] for q in questoes]
+    
+    # Conta quantos badges desta matéria o usuário já tem
+    licoes_ja_feitas = [badge for badge in badges_estudados if badge in ids_licoes_materia]
+    
+    # Define a questão atual como o número de lições já feitas
+    # Se ela fez 2 lições, a contagem é 2, e ela começará na lição de índice 2 (a 3ª lição)
+    st.session_state.questao_atual = len(licoes_ja_feitas)
+    # --- FIM DA CORREÇÃO ---
+
+    st.session_state.feedback = ""
+    st.session_state.acertos = 0
+    st.session_state.erros = 0
+    st.session_state.materia_anterior = materia
 
 # =====================================================
 # 🔹 LÓGICA DE SELEÇÃO DE LIÇÃO (A GRANDE MUDANÇA)
@@ -65,11 +87,11 @@ selected_lesson = st.selectbox(
     "Escolha uma lição para estudar ou revisar:",
     options=questoes,
     format_func=format_lesson_title,
-    index=min(licoes_feitas, total_licoes - 1) # Começa na próxima lição a ser feita
+    index=min(st.session_state.questao_atual, total_licoes - 1) # Começa na próxima lição a ser feita
 )
 
 # Se o usuário mudar a lição no selectbox, reinicia o estado
-if st.session_state.selected_lesson_id != selected_lesson["id"]:
+if "selected_lesson_id" not in st.session_state or st.session_state.selected_lesson_id != selected_lesson["id"]:
     st.session_state.fase = "aula"
     st.session_state.feedback = ""
     st.session_state.selected_lesson_id = selected_lesson["id"]

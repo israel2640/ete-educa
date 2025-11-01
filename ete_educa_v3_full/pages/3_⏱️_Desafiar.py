@@ -20,11 +20,12 @@ if "fase" not in st.session_state:
 
 progress = load_progress()
 
-# --- CORREÇÃO: Pega o nome do usuário da sessão ---
-if "user" not in st.session_state:
-    st.session_state.user = "aluna1" # Garante um valor padrão
-user = st.session_state.user
-st.info(f"Aluna: **{user}**") # Mostra qual aluna está logada
+# --- CORREÇÃO AQUI ---
+# Pega o nome do usuário do 'user_input' da página principal
+if "user_input" not in st.session_state:
+    st.session_state.user_input = "aluna1" 
+user = st.session_state.user_input # Lê a chave correta
+st.info(f"Aluna: **{user}**") 
 # --- FIM DA CORREÇÃO ---
 
 ensure_user(progress, user)

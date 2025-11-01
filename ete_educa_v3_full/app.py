@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from engine import QuizEngine  # usa o novo motor simplificado
+from engine import QuizEngine 
 
 st.set_page_config(page_title="ETE_Educa v4", page_icon="🎓", layout="centered")
 st.title("🎓 ETE_Educa v4 — Aprender → Treinar → Desafiar")
@@ -9,7 +9,19 @@ st.caption("Foco total no edital ETE Integrado. IA opcional (OpenAI).")
 # --- Sidebar ---
 with st.sidebar:
     st.header("👩‍🎓 Perfil do Aluno(a)")
-    user = st.text_input("Nome da aluna(o):", value="aluna1")
+    
+    # --- CORREÇÃO AQUI ---
+    # O 'key' já salva o valor no session_state. 
+    # Não precisamos da função 'on_change' que estava causando o bug de timing.
+    if "user_input" not in st.session_state:
+        st.session_state.user_input = "aluna1" # Valor padrão
+
+    st.text_input(
+        "Nome da aluna(o):", 
+        key="user_input" # O valor é salvo diretamente em st.session_state.user_input
+    )
+    # --- FIM DA CORREÇÃO ---
+    
     st.info("Use as páginas abaixo na sequência para aprender melhor 📚")
 
 st.markdown("### 📚 Módulos de Aprendizado")

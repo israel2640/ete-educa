@@ -9,23 +9,25 @@ from engine import (
 st.set_page_config(page_title="🎯 Treinar — ETE Educa", page_icon="🎯", layout="centered")
 st.header("🎯 Treinar — 3 perguntas por lição")
 
-# ====== Função auxiliar padronizada ======
+# ====== CORREÇÃO: Função auxiliar padronizada ======
 def normalizar_materia(nome: str) -> str:
     """Remove acentos e padroniza para minúsculas."""
     return ''.join(
         c for c in unicodedata.normalize('NFD', nome.lower())
         if unicodedata.category(c) != 'Mn'
     )
+# --- FIM DA CORREÇÃO ---
 
 # ====== Carregar dados ======
 lessons = load_lessons()
 progress = load_progress()
 
-# --- CORREÇÃO: Pega o nome do usuário da sessão ---
-if "user" not in st.session_state:
-    st.session_state.user = "aluna1" # Garante um valor padrão
-user = st.session_state.user
-st.info(f"Aluna: **{user}**") # Mostra qual aluna está logada
+# --- CORREÇÃO AQUI ---
+# Pega o nome do usuário do 'user_input' da página principal
+if "user_input" not in st.session_state:
+    st.session_state.user_input = "aluna1" 
+user = st.session_state.user_input # Lê a chave correta
+st.info(f"Aluna: **{user}**") 
 # --- FIM DA CORREÇÃO ---
 
 ensure_user(progress, user)
@@ -33,12 +35,10 @@ ensure_user(progress, user)
 materia = st.selectbox("Matéria", ["Português", "Matemática"], index=0)
 materia_key = normalizar_materia(materia)
 
-# Filtra as lições pela matéria (de forma segura)
 subs = [l for l in lessons if l.get("subject", "").lower() == materia_key]
 
-# ====== Ordenar lições (Lendo o progresso salvo) ======
+# ====== Ordenar lições ======
 # 'badges' agora contém todas as lições que foram 'estudadas'
-# Esta é a linha que LÊ o progresso salvo do GitHub
 studied = set(progress[user].get(materia_key, {}).get("badges", []))
 ordered = [l for l in subs if l["id"] in studied] + [l for l in subs if l["id"] not in studied]
 
@@ -48,7 +48,7 @@ if not ordered:
 
 lesson = st.selectbox("Lição", ordered, format_func=lambda x: f"{'✅ ' if x['id'] in studied else '🔒 '}{x['id']} — {x['title']}")
 
-# ====== Verificação de estudo (Baseado no progresso lido) ======
+# ====== Verificação de estudo ======
 if lesson["id"] not in studied:
     st.warning("📘 Estude esta lição primeiro (na página 'Estudar') para liberar o treino.")
     disable_train = True
