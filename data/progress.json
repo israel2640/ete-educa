@@ -17,7 +17,9 @@
       "simulados": 0
     },
     "reforco": [
-      "POR_01"
+      "POR_01",
+      "POR_02",
+      "POR_03"
     ],
     "nivel": "Bronze"
   }
