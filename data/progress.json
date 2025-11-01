@@ -1,7 +1,7 @@
 {
   "aluna1": {
     "portugues": {
-      "treinos_ok": 3,
+      "treinos_ok": 5,
       "erros": [],
       "badges": [
         "POR_01",
@@ -14,7 +14,7 @@
       ],
       "simulados": 0,
       "plano": {
-        "1": false,
+        "1": true,
         "2": false,
         "3": false,
         "4": false,
@@ -33,8 +33,10 @@
     "matematica": {
       "treinos_ok": 0,
       "erros": [],
-      "badges": [],
-      "simulados": 0
+      "badges": [
+        "MAT_01"
+      ],
+      "simulados": 1
     },
     "reforco": [
       "POR_03"
