@@ -45,21 +45,21 @@ simulados_feitos = user_progress.get("portugues", {}).get("simulados", 0) + user
 # Ele alterna matérias para evitar zerar uma delas 
 plano_base = [
     # Semana 1: Fundações
-    "**Português (Fundação):** 📘 Estudar e 🎯 Treinar a lição 'POR_01 - Compreensão de Texto'[cite: 177].",
-    "**Matemática (Fundação):** 📘 Estudar e 🎯 Treinar as lições 'MAT_01 - Quatro Operações' [cite: 197] e 'MAT_02 - Frações'[cite: 198].",
-    "**Português (Gramática Essencial):** 📘 Estudar e 🎯 Treinar 'POR_08 - Classes Gramaticais' [cite: 193] e 'POR_09 - Conectivos'[cite: 194].",
-    "**Matemática (Obrigatório):** 📘 Estudar e 🎯 Treinar 'MAT_11 - Porcentagem' [cite: 206] e 'MAT_10 - Regra de Três'[cite: 205].",
+    "**Português (Fundação):** 📘 Estudar e 🎯 Treinar a lição 'POR_01 - Compreensão de Texto'.",
+    "**Matemática (Fundação):** 📘 Estudar e 🎯 Treinar as lições 'MAT_01 - Quatro Operações'  e 'MAT_02 - Frações'.",
+    "**Português (Gramática Essencial):** 📘 Estudar e 🎯 Treinar 'POR_08 - Classes Gramaticais' e 'POR_09 - Conectivos'.",
+    "**Matemática (Obrigatório):** 📘 Estudar e 🎯 Treinar 'MAT_11 - Porcentagem' e 'MAT_10 - Regra de Três'.",
     "**REVISÃO (Dia 1):** 🧠 Ir para a página de 'Reforço' e revisar os tópicos que você errou nos primeiros 4 dias.",
-    "**Português (Gramática Chave):** 📘 Estudar e 🎯 Treinar 'POR_10 - Pontuação' [cite: 194] e 'POR_11 - Concordância'[cite: 195].",
-    "**Matemática (Álgebra Essencial):** 📘 Estudar e 🎯 Treinar 'MAT_17 - Equações 1º Grau' [cite: 211] e 'MAT_18 - Sistemas Lineares'[cite: 212].",
+    "**Português (Gramática Chave):** 📘 Estudar e 🎯 Treinar 'POR_10 - Pontuação' e 'POR_11 - Concordância'.",
+    "**Matemática (Álgebra Essencial):** 📘 Estudar e 🎯 Treinar 'MAT_17 - Equações 1º Grau' e 'MAT_18 - Sistemas Lineares'.",
     
     # Semana 2: Check-up e Tópicos Difíceis
     "**CHECKPOINT (Simulado 1):** ⏱️ Ir para a página 'Desafiar' e fazer um simulado curto (10 questões) de Português.",
     "**CHECKPOINT (Simulado 2):** ⏱️ Ir para a página 'Desafiar' e fazer um simulado curto (10 questões) de Matemática.",
     "**REVISÃO (Dia 2):** 🧠 Ir para a página de 'Reforço'. Seu simulado adicionou novos tópicos aqui. Revise-os!",
-    "**Português (Tópico Difícil):** 📘 Estudar e 🎯 Treinar 'POR_12 - Crase'[cite: 195]. Use a 🤖 'Revisão com IA' se tiver dúvidas.",
-    "**Matemática (Geometria):** 📘 Estudar e 🎯 Treinar 'MAT_19 - Ângulos' [cite: 213] e 'MAT_21 - Triângulos'[cite: 214].",
-    "**REVISÃO FINAL (Prova!):** ⏱️ Ir para a página 'Desafiar' e fazer um simulado completo (20 questões)[cite: 62].",
+    "**Português (Tópico Difícil):** 📘 Estudar e 🎯 Treinar 'POR_12 - Crase'. Use a 🤖 'Revisão com IA' se tiver dúvidas.",
+    "**Matemática (Geometria):** 📘 Estudar e 🎯 Treinar 'MAT_19 - Ângulos' e 'MAT_21 - Triângulos'.",
+    "**REVISÃO FINAL (Prova!):** ⏱️ Ir para a página 'Desafiar' e fazer um simulado completo (20 questões).",
     "**DESCANSO E REVISÃO LEVE:** 🧠 Zerar a lista de 'Reforço' pela última vez e usar a 🤖 'Revisão com IA' para dúvidas finais."
 ]
 
