@@ -116,7 +116,7 @@ if st.session_state.fase == "aula":
     st.info("💡 Exemplo: " + exemplo)
 
     # Explicação com IA (usando ai_helpers)
-    if st.checkbox("Gerar explicação da IA (requer chave .env)"):
+    if st.checkbox("Gerar explicação da IA "):
         with st.spinner("A IA está explicando com carinho..."):
             try:
                 explicacao = explain_like_coach(
