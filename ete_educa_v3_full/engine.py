@@ -1,9 +1,10 @@
 import os
 import json
 import random
-import streamlit as st # Importar streamlit para ler os segredos
-from typing import Dict, List, Tuple # <--- IMPORTANTE: Adicionar Tuple
-from supabase import create_client, Client
+import streamlit as st
+import base64
+from typing import Dict, List, Tuple
+from github import Github, UnknownObjectException
 
 # CORREÇÃO: Importar 'questoes' de dentro da pasta 'data'
 try:
@@ -14,36 +15,31 @@ except ImportError:
     ALL_LESSONS = []
 
 # =====================================================
-# 🔹 Configuração do Supabase
+# 🔹 Configuração do GitHub
 # =====================================================
+PROGRESS_FILE_PATH = "data/progress.json"
 
 @st.cache_resource
-def init_supabase_client():
-    # Tenta carregar dos segredos do Streamlit (nuvem)
-    url = st.secrets.get("SUPABASE_URL")
-    key = st.secrets.get("SUPABASE_KEY")
+def init_github_client():
+    token = st.secrets.get("GITHUB_TOKEN")
+    repo_name = st.secrets.get("GITHUB_REPO")
     
-    # Fallback para .env (se rodar localmente)
-    if not url or not key:
-        from dotenv import load_dotenv
-        load_dotenv()
-        url = os.environ.get("SUPABASE_URL")
-        key = os.environ.get("SUPABASE_KEY")
-
-    if not url or not key:
-        print("AVISO: Variáveis SUPABASE_URL ou SUPABASE_KEY não encontradas.")
-        return None
+    if not token or not repo_name:
+        print("AVISO: GITHUB_TOKEN ou GITHUB_REPO não encontrados nos segredos.")
+        return None, None
         
     try:
-        return create_client(url, key)
+        g = Github(token)
+        repo = g.get_repo(repo_name)
+        return g, repo
     except Exception as e:
-        print(f"Erro ao conectar ao Supabase: {e}")
-        return None
+        print(f"Erro ao conectar ao GitHub: {e}")
+        return None, None
 
-supabase: Client = init_supabase_client()
+github_client, github_repo = init_github_client()
 
 # =====================================================
-# 🔹 Classe principal do motor de questões
+# 🔹 Classe principal do motor de questões (Sem Mudança)
 # =====================================================
 class QuizEngine:
     def __init__(self, questoes_lista: List[Dict]):
@@ -52,9 +48,7 @@ class QuizEngine:
         self.acertos = 0
         self.erros = 0
 
-    # --- ESTA É A LINHA CORRIGIDA ---
     def responder(self, resposta: str) -> tuple[bool, str]:
-    # --- FIM DA CORREÇÃO ---
         """Verifica se a resposta está correta e retorna (bool, explicação)."""
         if self.atual >= len(self.questoes):
             return False, "Não há mais questões."
@@ -88,63 +82,83 @@ class QuizEngine:
         return acertou, feedback
 
 # =====================================================
-# 🔹 Progresso do usuário (MODIFICADO PARA SUPABASE)
+# 🔹 Progresso do usuário (MODIFICADO PARA GITHUB)
 # =====================================================
 DEFAULT_USER_PROGRESS = {
-    "portugues": {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0},
-    "matematica": {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0},
-    "reforco": [],
-    "nivel": "Bronze"
+    "aluna1": {
+        "portugues": {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0},
+        "matematica": {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0},
+        "reforco": [],
+        "nivel": "Bronze"
+    }
 }
 
-# Carrega o progresso de TODOS os usuários do Supabase
-# Usamos cache para não ler o DB toda hora
+# Carrega o progresso de TODOS os usuários do GitHub
 @st.cache_data(ttl=60) # Cache de 1 minuto
-def load_progress_from_db():
-    if not supabase:
-        print("AVISO: Supabase não conectado. Usando progresso local temporário.")
-        return {} # Retorna vazio se o Supabase não estiver conectado
+def load_progress_from_github():
+    if not github_repo:
+        print("AVISO: Repositório GitHub não conectado. Usando progresso local temporário.")
+        return DEFAULT_USER_PROGRESS
     try:
-        response = supabase.table("user_progress").select("user_id", "progress_data").execute()
-        data = response.data
-        progress_dict = {}
-        for item in data:
-            progress_dict[item['user_id']] = item['progress_data']
+        file = github_repo.get_contents(PROGRESS_FILE_PATH, ref="main")
+        content_decoded = base64.b64decode(file.content).decode("utf-8")
+        progress_dict = json.loads(content_decoded)
         return progress_dict
+    except UnknownObjectException:
+        # O arquivo data/progress.json não existe no repo.
+        print("AVISO: 'data/progress.json' não encontrado no GitHub. Criando um novo.")
+        return DEFAULT_USER_PROGRESS
     except Exception as e:
-        print(f"Erro ao carregar progresso: {e}")
-        return {}
+        print(f"Erro ao carregar progresso do GitHub: {e}")
+        return DEFAULT_USER_PROGRESS
 
-# Carrega o dicionário de progresso (AGORA DO SUPABASE)
+# Carrega o dicionário de progresso (AGORA DO GITHUB)
 def load_progress():
-    return load_progress_from_db()
+    return load_progress_from_github()
 
-# Salva o progresso no Supabase
+# Salva o progresso no GitHub
 def save_progress(progress: Dict):
-    if not supabase:
-        print("AVISO: Supabase não conectado. Progresso não salvo.")
+    if not github_repo:
+        print("AVISO: GitHub não conectado. Progresso não salvo.")
         return
-    
+
     try:
-        # O progresso que recebemos é o dict inteiro.
-        # Precisamos salvar usuário por usuário.
-        for user_id, data in progress.items():
-            supabase.table("user_progress").upsert({
-                "user_id": user_id,
-                "progress_data": data,
-                "updated_at": "now()"
-            }).execute()
+        data_str = json.dumps(progress, indent=2, ensure_ascii=False)
+        user_id = list(progress.keys())[0] if progress else "aluna1"
+        commit_message = f"Atualizando progresso de {user_id}"
         
+        # Tenta pegar o arquivo para saber o "SHA" (ID da versão)
+        try:
+            file = github_repo.get_contents(PROGRESS_FILE_PATH, ref="main")
+            # Se achou, atualiza o arquivo
+            github_repo.update_file(
+                path=PROGRESS_FILE_PATH,
+                message=commit_message,
+                content=data_str,
+                sha=file.sha,
+                branch="main"
+            )
+            print("Progresso atualizado no GitHub.")
+        except UnknownObjectException:
+            # Se não achou, cria o arquivo
+            github_repo.create_file(
+                path=PROGRESS_FILE_PATH,
+                message=commit_message,
+                content=data_str,
+                branch="main"
+            )
+            print("Arquivo de progresso criado no GitHub.")
+
         # Limpa o cache para que a próxima leitura pegue os dados novos
         st.cache_data.clear()
         
     except Exception as e:
-        print(f"Erro ao salvar progresso: {e}")
+        print(f"Erro ao salvar progresso no GitHub: {e}")
 
-# Garante que o usuário exista no dicionário de progresso
+# Garante que o usuário exista no dicionário de progresso (sem mudança)
 def ensure_user(progress, user):
     if user not in progress:
-        progress[user] = DEFAULT_USER_PROGRESS.copy()
+        progress[user] = DEFAULT_USER_PROGRESS.get("aluna1", {}).copy()
     
     # Garante que as chaves de matéria existam
     if "portugues" not in progress[user]:
