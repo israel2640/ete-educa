@@ -26,7 +26,7 @@ user = st.session_state.user
 st.info(f"Aluno(a) logado: **{user}**") # Mostra quem está logado
 
 
-ensure_user(progress, user)
+ensure_user(progress, user, "")
 
 # =====================================================
 # 🔹 Escolha da matéria

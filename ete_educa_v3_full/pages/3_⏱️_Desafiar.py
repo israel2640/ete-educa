@@ -30,7 +30,7 @@ user = st.session_state.user
 st.info(f"Aluno(a) logado: **{user}**") # Mostra quem está logado
 
 
-ensure_user(progress, user)
+ensure_user(progress, user, "")
 
 # ====== Função auxiliar padronizada ======
 def normalizar_materia(nome: str) -> str:
@@ -154,10 +154,7 @@ elif st.session_state.fase == "resultado":
             st.warning("📘 Continue estudando as lições e refaça o simulado para subir de nível.")
 
         materia_key = normalizar_materia(st.session_state.materia)
-        
-        if user not in progress:
-             ensure_user(progress, user) 
-             
+
         progress[user][materia_key]["simulados"] = progress[user][materia_key].get("simulados", 0) + 1
         save_progress(progress)
 

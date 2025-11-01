@@ -32,7 +32,7 @@ user = st.session_state.user
 st.info(f"Aluno(a) logado: **{user}**") # Mostra quem está logado
 
 
-ensure_user(progress, user)
+ensure_user(progress, user, "")
 
 materia = st.selectbox("Matéria", ["Português", "Matemática"], index=0)
 materia_key = normalizar_materia(materia)

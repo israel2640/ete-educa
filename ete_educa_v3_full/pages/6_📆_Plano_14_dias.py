@@ -21,8 +21,10 @@ if "user" not in st.session_state or not st.session_state.user:
 
 usuario = st.session_state.user
 st.info(f"Aluno(a) logado: **{usuario}**") # Mostra quem está logado
-ensure_user(progress, usuario) # Garante que o usuário ainda existe no JSON
-# --- FIM DO NOVO BLOCO ---
+
+# CORREÇÃO: A função agora precisa de 3 argumentos.
+ensure_user(progress, usuario, "") 
+
 
 # --- LÓGICA CORRIGIDA ---
 # O plano de 14 dias agora é ÚNICO para o usuário, não mais separado por matéria.

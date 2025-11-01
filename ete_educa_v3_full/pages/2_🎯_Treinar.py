@@ -53,7 +53,7 @@ if "user" not in st.session_state or not st.session_state.user:
 
 user = st.session_state.user
 st.info(f"Aluno(a) logado: **{user}**") # Mostra quem está logado
-ensure_user(progress, user) # Garante que o usuário ainda existe no JSON
+ensure_user(progress, user, "") # Garante que o usuário ainda existe no JSON
 # --- FIM DO NOVO BLOCO ---
 
 materia = st.selectbox("Matéria", ["Português", "Matemática"], index=0)
