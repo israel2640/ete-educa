@@ -4,7 +4,10 @@
     "portugues": {
       "treinos_ok": 0,
       "erros": [],
-      "badges": [],
+      "badges": [
+        "POR_01",
+        "POR_02"
+      ],
       "simulados": 0
     },
     "matematica": {
@@ -39,7 +42,8 @@
       "erros": [],
       "badges": [
         "POR_01",
-        "POR_02"
+        "POR_02",
+        "POR_03"
       ],
       "simulados": 0
     },
