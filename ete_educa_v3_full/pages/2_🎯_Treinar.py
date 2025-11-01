@@ -9,26 +9,23 @@ from engine import (
 st.set_page_config(page_title="🎯 Treinar — ETE Educa", page_icon="🎯", layout="centered")
 st.header("🎯 Treinar — 3 perguntas por lição")
 
-# ====== CORREÇÃO: Função auxiliar padronizada ======
+# ====== Função auxiliar padronizada ======
 def normalizar_materia(nome: str) -> str:
     """Remove acentos e padroniza para minúsculas."""
     return ''.join(
         c for c in unicodedata.normalize('NFD', nome.lower())
         if unicodedata.category(c) != 'Mn'
     )
-# --- FIM DA CORREÇÃO ---
 
 # ====== Carregar dados ======
 lessons = load_lessons()
 progress = load_progress()
 
-# --- CORREÇÃO AQUI ---
-# Pega o nome do usuário do 'user_input' da página principal
+# --- Pega o nome do usuário da sessão ---
 if "user_input" not in st.session_state:
     st.session_state.user_input = "aluna1" 
-user = st.session_state.user_input # Lê a chave correta
+user = st.session_state.user_input 
 st.info(f"Aluna: **{user}**") 
-# --- FIM DA CORREÇÃO ---
 
 ensure_user(progress, user)
 
@@ -37,8 +34,7 @@ materia_key = normalizar_materia(materia)
 
 subs = [l for l in lessons if l.get("subject", "").lower() == materia_key]
 
-# ====== Ordenar lições ======
-# 'badges' agora contém todas as lições que foram 'estudadas'
+# ====== Ordenar lições (Lendo o progresso salvo) ======
 studied = set(progress[user].get(materia_key, {}).get("badges", []))
 ordered = [l for l in subs if l["id"] in studied] + [l for l in subs if l["id"] not in studied]
 
@@ -48,7 +44,7 @@ if not ordered:
 
 lesson = st.selectbox("Lição", ordered, format_func=lambda x: f"{'✅ ' if x['id'] in studied else '🔒 '}{x['id']} — {x['title']}")
 
-# ====== Verificação de estudo ======
+# ====== Verificação de estudo (Baseado no progresso lido) ======
 if lesson["id"] not in studied:
     st.warning("📘 Estude esta lição primeiro (na página 'Estudar') para liberar o treino.")
     disable_train = True
@@ -67,7 +63,6 @@ if total == 0:
 
 respostas_usuario = {}
 
-# Usar um formulário para evitar que os botões "Confirmar" recarreguem a página
 with st.form("treino_form"):
     for i, q in enumerate(train_questions, start=1):
         st.markdown(f"**{i}. {q['q']}**")
@@ -84,7 +79,11 @@ if submitted:
     corrects = 0
     # Processar respostas
     for key, (resposta_aluna, gabarito, explicacao) in respostas_usuario.items():
-        if resposta_aluna == gabarito:
+        
+        # --- CORREÇÃO DO BUG DE COMPARAÇÃO ---
+        # Limpa espaços em branco antes de comparar
+        if resposta_aluna is not None and resposta_aluna.strip() == gabarito.strip():
+        # --- FIM DA CORREÇÃO ---
             st.success(f"✅ Questão '{key}' correta! {explicacao}")
             corrects += 1
         else:
@@ -93,8 +92,10 @@ if submitted:
             
     st.divider()
     
-    # Mínimo de 2 acertos ou 70%
-    min_acertos = max(2, int(total * 0.7)) 
+    # --- CORREÇÃO DO BUG DE APROVAÇÃO (0/1) ---
+    # Mínimo de 1 acerto, ou 70%
+    min_acertos = max(1, int(total * 0.7)) 
+    # --- FIM DA CORREÇÃO ---
 
     if corrects >= min_acertos:
         set_train_ok(progress, user, materia_key, lesson["id"])
