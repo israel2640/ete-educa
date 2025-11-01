@@ -149,6 +149,7 @@ elif st.session_state.fase == "questao":
                 st.session_state.fase = "aula"
                 st.rerun()
         else:
+            st.markdown(f"**{q['q']}**")
             resposta = st.radio("Escolha sua resposta:", q["opts"], key=f"q_{questao['id']}", index=None)
             
             if st.button("Responder"):
