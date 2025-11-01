@@ -1,0 +1,21 @@
+{
+  "aluna1": {
+    "portugues": {
+      "treinos_ok": 0,
+      "erros": [],
+      "badges": [
+        "POR_01",
+        "POR_02"
+      ],
+      "simulados": 0
+    },
+    "matematica": {
+      "treinos_ok": 0,
+      "erros": [],
+      "badges": [],
+      "simulados": 0
+    },
+    "reforco": [],
+    "nivel": "Bronze"
+  }
+}
