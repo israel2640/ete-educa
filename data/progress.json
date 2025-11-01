@@ -30,5 +30,21 @@
       "13": false,
       "14": false
     }
+  },
+  "Israel": {
+    "portugues": {
+      "treinos_ok": 0,
+      "erros": [],
+      "badges": [],
+      "simulados": 0
+    },
+    "matematica": {
+      "treinos_ok": 0,
+      "erros": [],
+      "badges": [],
+      "simulados": 0
+    },
+    "reforco": [],
+    "nivel": "Bronze"
   }
 }
