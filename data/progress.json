@@ -1,5 +1,6 @@
 {
   "Bianca": {
+    "password": "2640",
     "portugues": {
       "treinos_ok": 0,
       "erros": [],
@@ -32,6 +33,7 @@
     }
   },
   "Israel": {
+    "password": "2640",
     "portugues": {
       "treinos_ok": 0,
       "erros": [],
