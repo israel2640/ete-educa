@@ -61,7 +61,9 @@ if total == 0:
     st.error("❌ Nenhuma questão cadastrada para esta lição.")
     st.stop()
 
-respostas_usuario = {}
+# --- INÍCIO DA CORREÇÃO DE LÓGICA DO FORMULÁRIO ---
+# Vamos guardar os 'keys' e 'gabaritos' para verificar DEPOIS do submit
+keys_and_gabaritos = []
 
 with st.form("treino_form"):
     st.warning("Lembre-se de clicar no CÍRCULO ao lado da opção para selecionar sua resposta.")
@@ -70,9 +72,16 @@ with st.form("treino_form"):
         st.markdown(f"**{i}. {q['q']}**")
         opts = shuffled_options(q["opts"])
         
+        # Este é o 'identificador' único da resposta no formulário
         key = f"t_{lesson['id']}_{i}"
-        ch = st.radio("Escolha:", opts, key=key, disabled=disable_train, index=None)
-        respostas_usuario[key] = (ch, q["ans"], q.get("exp", "Sem explicação."))
+        
+        # Apenas exibe o radio. O valor fica guardado no st.session_state[key]
+        st.radio("Escolha:", opts, key=key, disabled=disable_train, index=None)
+        
+        # Guarda o que precisamos verificar depois
+        keys_and_gabaritos.append(
+            (key, q["ans"], q.get("exp", "Sem explicação."))
+        )
 
     submitted = st.form_submit_button("Finalizar treino", disabled=disable_train)
 
@@ -81,20 +90,21 @@ if submitted:
     corrects = 0
     all_answered = True
     
-    # Processar respostas
-    for key, (resposta_aluna, gabarito, explicacao) in respostas_usuario.items():
+    # Processar respostas DEPOIS que o formulário foi enviado
+    for key, gabarito, explicacao in keys_and_gabaritos:
         
-        # --- CORREÇÃO: VERIFICA SE A RESPOSTA É NULA ---
+        # Pega a resposta do usuário diretamente do estado do Streamlit
+        resposta_aluna = st.session_state[key]
+        
         if resposta_aluna is None:
-            st.error(f"❌ Questão '{key}' não foi respondida! Você precisa clicar no círculo.")
+            st.error(f"❌ Questão '{q['q'][:20]}...' não foi respondida! Você precisa clicar no círculo.")
             all_answered = False
         
         elif resposta_aluna.strip() == gabarito.strip():
-        # --- FIM DA CORREÇÃO ---
-            st.success(f"✅ Questão '{key}' correta! {explicacao}")
+            st.success(f"✅ Questão '{q['q'][:20]}...' correta! {explicacao}")
             corrects += 1
         else:
-            st.error(f"❌ Questão '{key}' incorreta. A resposta era '{gabarito}'.")
+            st.error(f"❌ Questão '{q['q'][:20]}...' incorreta. A resposta era '{gabarito}'.")
             st.info(explicacao)
             
     st.divider()
@@ -114,6 +124,8 @@ if submitted:
             st.warning(f"⚠️ Treino não aprovado. ({corrects}/{total}) Este tema foi adicionado ao modo 'Reforço' para revisão.")
         
         save_progress(progress) # Salva o resultado no GitHub
+# --- FIM DA CORREÇÃO DE LÓGICA DO FORMULÁRIO ---
+
 
 # ====== Indicador de progresso ======
 if materia_key not in progress[user]:
