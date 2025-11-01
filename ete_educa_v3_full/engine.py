@@ -39,7 +39,7 @@ def init_github_client():
 github_client, github_repo = init_github_client()
 
 # =====================================================
-# 🔹 Classe principal do motor de questões (Sem Mudança)
+# 🔹 Classe principal do motor de questões
 # =====================================================
 class QuizEngine:
     def __init__(self, questoes_lista: List[Dict]):
@@ -155,7 +155,7 @@ def save_progress(progress: Dict):
     except Exception as e:
         print(f"Erro ao salvar progresso no GitHub: {e}")
 
-# Garante que o usuário exista no dicionário de progresso (sem mudança)
+# Garante que o usuário exista no dicionário de progresso
 def ensure_user(progress, user):
     if user not in progress:
         progress[user] = DEFAULT_USER_PROGRESS.get("aluna1", {}).copy()
@@ -171,7 +171,7 @@ def ensure_user(progress, user):
     return progress
 
 # =====================================================
-# 🔹 Funções auxiliares do treino/reforço (sem mudança)
+# 🔹 Funções auxiliares do treino/reforço (CORRIGIDAS)
 # =====================================================
 def shuffled_options(options):
     opts = list(options)
@@ -179,17 +179,22 @@ def shuffled_options(options):
     return opts
 
 def add_reforco(progress, user, lesson_id):
+    # Acessa a lista de reforço no nível correto
     if lesson_id not in progress[user]["reforco"]:
         progress[user]["reforco"].append(lesson_id)
 
 def set_train_ok(progress, user, subject_key, lesson_id):
+    # Acessa a lista de treinos no nível correto
     progress[user][subject_key]["treinos_ok"] = progress[user][subject_key].get("treinos_ok", 0) + 1
     if lesson_id in progress[user]["reforco"]:
         progress[user]["reforco"].remove(lesson_id)
 
 def set_studied(progress, user, subject_key, lesson_id):
-    if lesson_id not in progress[user]["badges"]:
+    # --- ESTA É A FUNÇÃO QUE ESTAVA DANDO ERRO ---
+    # Acessa a lista de badges no nível correto
+    if lesson_id not in progress[user][subject_key]["badges"]:
         progress[user][subject_key]["badges"].append(lesson_id)
+    # --- FIM DA CORREÇÃO ---
 
 # =====================================================
 # 🔹 Carregamento das lições (sem mudança)
