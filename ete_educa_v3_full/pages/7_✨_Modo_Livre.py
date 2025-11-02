@@ -130,28 +130,30 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
             index=None,
             key="modo_livre_radio"
         )
-        
+
+        # 🔹 Botão para revelar a resposta
         if st.button("Revelar Resposta e Explicação"):
             st.session_state.reveal_answer = True
 
+        # 🔹 Quando o aluno clica em "Revelar", mostra a resposta e a explicação
         if st.session_state.reveal_answer:
-            # A RESPOSTA CORRETA AGORA VEM DO PYTHON, NÃO DA IA
             correta = st.session_state.correct_answer_verified
-            
+
             if resposta_usuario == correta:
                 st.success(f"🎉 Você acertou! A resposta correta (verificada pelo Python) é: **{correta}**")
                 st.balloons()
             else:
                 st.error(f"❌ Você marcou: {resposta_usuario}\nA resposta correta (verificada pelo Python) era: **{correta}**")
-            
+
             st.subheader("Explicação do Mestre:")
 
-            # 🔹 Usa a função divertida da professora do 9º ano
+            # 🔹 Usa a explicação divertida para todas as matérias
             explicacao_original = q_data.get("explicacao", "Sem explicação disponível.")
             explicacao_divertida = explain_like_coach(explicacao_original, materia)
 
             st.markdown(explicacao_divertida)
-            
+
+            # --- Botão para gerar nova pergunta ---
             if st.button("Gerar Outra Pergunta"):
                 st.session_state.new_question_data = None
                 st.session_state.reveal_answer = False
