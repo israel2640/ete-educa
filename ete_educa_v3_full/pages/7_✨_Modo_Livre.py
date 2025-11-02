@@ -13,10 +13,6 @@ from ai_helpers import (
     ask_quick_question       # para perguntas do aluno
 )
 
-
-# AQUI ESTÁ A MUDANÇA: importamos a nova função de verificação
-from ai_helpers import generate_math_question, generate_portuguese_question
-
 st.set_page_config(page_title="Modo Livre — ETE Educa", layout="centered")
 st.title("✨ Modo Livre — Prática Infinita (Verificada)")
 st.caption("A IA gera perguntas inéditas e o Python verifica a resposta para garantir 100% de precisão!")
@@ -71,22 +67,19 @@ if st.button(f"Gerar Pergunta Inédita sobre {topico}"):
 
         # 2) Se gerou, LIMPA primeiro (antes de salvar e antes de verificar)
         if q_data:
-            from ai_helpers import limpar_texto_pergunta  # (segurança, caso importe no topo já está ok)
-
-            if "pergunta" in q_data and isinstance(q_data["pergunta"], str):
+            # 🔹 Limpa textos bugados vindos da IA (antes de salvar no session_state)
+            if "pergunta" in q_data:
                 q_data["pergunta"] = limpar_texto_pergunta(q_data["pergunta"])
-            if "texto" in q_data and isinstance(q_data["texto"], str):
+            if "texto" in q_data:
                 q_data["texto"] = limpar_texto_pergunta(q_data["texto"])
-            if "explicacao" in q_data and isinstance(q_data["explicacao"], str):
+            if "explicacao" in q_data:
                 q_data["explicacao"] = limpar_texto_pergunta(q_data["explicacao"])
             if "opcoes" in q_data and isinstance(q_data["opcoes"], list):
-                q_data["opcoes"] = [
-                    limpar_texto_pergunta(op) if isinstance(op, str) else op
-                    for op in q_data["opcoes"]
-                ]
+                q_data["opcoes"] = [limpar_texto_pergunta(op) for op in q_data["opcoes"]]
 
-            # 3) Salva a versão limpa
+            # Depois de limpar, salva
             st.session_state.new_question_data = q_data
+
 
             # 4) Verifica a resposta (apenas Matemática)
             if materia == "Matemática":
@@ -132,7 +125,8 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
         st.divider()
 
     # 🔹 Exibir a pergunta
-    st.markdown(q_data.get("pergunta", "Erro ao carregar pergunta."))
+    st.markdown(f"**📝 {q_data.get('pergunta', 'Erro ao carregar pergunta.')}**")
+
 
     opcoes = q_data.get("opcoes", [])
     if opcoes:
@@ -167,84 +161,84 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
             st.markdown(f"🧠 {explicacao_divertida}")
 
             # 🔹 Campo para o aluno perguntar sobre a explicação
-st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")
+    st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")
 
-# --- Inicializa variáveis ---
-if "chat_duvidas" not in st.session_state:
-    st.session_state.chat_duvidas = []
-if "limpar_input" not in st.session_state:
-    st.session_state.limpar_input = False
-
-# --- Se a flag estiver ativa, limpa o input ---
-if st.session_state.limpar_input:
-    st.session_state.limpar_input = False
-    st.session_state.pergunta_aluno = ""
-
-# --- Exibe histórico do chat antes do input ---
-if st.session_state.chat_duvidas:
-    st.markdown("🧠 **Chat com a Professora IA**")
-    st.markdown("""
-    <style>
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 10px;
-        }
-        .mensagem-aluno {
-            align-self: flex-end;
-            background: linear-gradient(135deg, #0078D7, #00B4FF);
-            color: white;
-            padding: 10px 14px;
-            border-radius: 18px 18px 0px 18px;
-            max-width: 70%;
-            box-shadow: 0px 2px 5px rgba(0,0,0,0.15);
-        }
-        .mensagem-professora {
-            align-self: flex-start;
-            background: #FFFBEA;
-            color: #333;
-            padding: 10px 14px;
-            border-radius: 18px 18px 18px 0px;
-            max-width: 80%;
-            border: 1px solid #FFE58A;
-            box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
-    st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
-    for msg in st.session_state.chat_duvidas:
-        st.markdown(f"""
-        <div class='mensagem-aluno'><b>👦 Você:</b> {msg["pergunta"]}</div>
-        <div class='mensagem-professora'><b>👩‍🏫 Professora:</b> {msg["resposta"]}</div>
-        """, unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# --- Campo de entrada AGORA fica embaixo ---
-st.divider()
-pergunta_aluno = st.text_input("Digite sua pergunta aqui:", key="pergunta_aluno")
-
-if pergunta_aluno:
-    with st.spinner("A professora está pensando... 🤔"):
-        resposta_duvida = ask_quick_question(
-            f"Matéria: {materia}\n\nExplicação: {explicacao_divertida}\n\nPergunta do aluno: {pergunta_aluno}"
-        )
-
-    st.session_state.chat_duvidas.append({
-        "pergunta": pergunta_aluno,
-        "resposta": resposta_duvida
-    })
-
-    st.session_state.limpar_input = True
-    st.rerun()
-
-# --- Botão de limpar conversa ---
-if st.session_state.chat_duvidas:
-    st.divider()
-    if st.button("🧹 Limpar conversa"):
+    # --- Inicializa variáveis ---
+    if "chat_duvidas" not in st.session_state:
         st.session_state.chat_duvidas = []
+    if "limpar_input" not in st.session_state:
+        st.session_state.limpar_input = False
+
+    # --- Se a flag estiver ativa, limpa o input ---
+    if st.session_state.limpar_input:
+        st.session_state.limpar_input = False
+        st.session_state.pergunta_aluno = ""
+
+    # --- Exibe histórico do chat antes do input ---
+    if st.session_state.chat_duvidas:
+        st.markdown("🧠 **Chat com a Professora IA**")
+        st.markdown("""
+        <style>
+            .chat-container {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                margin-top: 10px;
+            }
+            .mensagem-aluno {
+                align-self: flex-end;
+                background: linear-gradient(135deg, #0078D7, #00B4FF);
+                color: white;
+                padding: 10px 14px;
+                border-radius: 18px 18px 0px 18px;
+                max-width: 70%;
+                box-shadow: 0px 2px 5px rgba(0,0,0,0.15);
+            }
+            .mensagem-professora {
+                align-self: flex-start;
+                background: #FFFBEA;
+                color: #333;
+                padding: 10px 14px;
+                border-radius: 18px 18px 18px 0px;
+                max-width: 80%;
+                border: 1px solid #FFE58A;
+                box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
+        for msg in st.session_state.chat_duvidas:
+            st.markdown(f"""
+            <div class='mensagem-aluno'><b>👦 Você:</b> {msg["pergunta"]}</div>
+            <div class='mensagem-professora'><b>👩‍🏫 Professora:</b> {msg["resposta"]}</div>
+            """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # --- Campo de entrada AGORA fica embaixo ---
+    st.divider()
+    pergunta_aluno = st.text_input("Digite sua pergunta aqui:", key="pergunta_aluno")
+
+    if pergunta_aluno:
+        with st.spinner("A professora está pensando... 🤔"):
+            resposta_duvida = ask_quick_question(
+                f"Matéria: {materia}\n\nExplicação: {explicacao_divertida}\n\nPergunta do aluno: {pergunta_aluno}"
+            )
+
+        st.session_state.chat_duvidas.append({
+            "pergunta": pergunta_aluno,
+            "resposta": resposta_duvida
+        })
+
         st.session_state.limpar_input = True
         st.rerun()
 
-st.caption("💬 O chat fica salvo enquanto você estiver nesta sessão 👩‍🏫")
+    # --- Botão de limpar conversa ---
+    if st.session_state.chat_duvidas:
+        st.divider()
+        if st.button("🧹 Limpar conversa"):
+            st.session_state.chat_duvidas = []
+            st.session_state.limpar_input = True
+            st.rerun()
+
+    st.caption("💬 O chat fica salvo enquanto você estiver nesta sessão 👩‍🏫")

@@ -259,9 +259,6 @@ Explique no estilo de professora divertida, com linguagem popular e exemplos pr�
 """
     return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1)
 
-
-
-
 def ask_quick_question(pergunta: str) -> str:
     """Responde perguntas rápidas e didáticas."""
     system = (
@@ -275,49 +272,40 @@ import html
 
 def limpar_texto_pergunta(texto: str) -> str:
     """
-    Corrige textos gerados pela IA com erros de codificação, HTML e palavras coladas.
-    Exemplo:
-    'R5eeleain...pagouR12' -> 'R$ 5 e ele ainda pagou R$ 12'
+    Corrige textos bugados vindos da IA:
+    - Adiciona espaço depois de valores monetários (R6,00de → R$ 6,00 de)
+    - Decodifica HTML
+    - Remove tags e símbolos estranhos
     """
 
     if not texto:
         return texto
 
-    # 1️⃣ Decodifica entidades HTML (&eacute;, &ccedil;, etc.)
+    # 1️⃣ Decodifica HTML (&eacute;, &ccedil;, etc.)
     texto = html.unescape(texto)
 
-    # 2️⃣ Corrige símbolos monetários e valores quebrados
-    texto = re.sub(r"R\s*([0-9])", r"R$ \1", texto)       # R5 → R$ 5
-    texto = re.sub(r"R\$\s*([A-Z])", r"R$ \1", texto)     # R$A → R$ A (corrige colagem)
-    texto = texto.replace("Rx", "R$ x")                   # Rx → R$ x
-    texto = texto.replace("R$", "R$ ")                    # Garante espaço após o símbolo
+    # 2️⃣ Garante que o símbolo de moeda esteja correto
+    texto = texto.replace("R$", "R$ ")
+    texto = re.sub(r"R\s*(\d)", r"R$ \1", texto)  # R6 → R$ 6
+    texto = re.sub(r"R\$\s*,", "R$ 0,", texto)     # R$,00 → R$ 0,00 (casos raros)
 
-    # 3️⃣ Corrige caracteres bugados (ex: Ã© → é)
-    texto = texto.encode("latin1", errors="ignore").decode("utf-8", errors="ignore")
+    # 3️⃣ Corrige números grudados em palavras
+    texto = re.sub(r"(\d)([A-Za-z])", r"\1 \2", texto)  # 24cada → 24 cada
+    texto = re.sub(r"([A-Za-z])(\d)", r"\1 \2", texto)  # Rde2 → R de 2
+    texto = re.sub(r"(\d,\d{2})([A-Za-z])", r"\1 \2", texto)  # 6,00de → 6,00 de
 
-    # 4️⃣ Insere espaços entre palavras coladas (ex: 'Masdessetotal' → 'Mas desse total')
-    texto = re.sub(r"(?<=[a-zà-ú])(?=[A-Z])", " ", texto)
-    texto = re.sub(r"([a-zà-ú])([A-ZÀ-Ú])", r"\1 \2", texto)
-    texto = re.sub(r"(\d)([A-Za-z])", r"\1 \2", texto)
-    texto = re.sub(r"([A-Za-z])(\d)", r"\1 \2", texto)
-    texto = re.sub(r"([a-z])([A-Z])", r"\1 \2", texto)
-
-    # 5️⃣ Remove tags estranhas ou sobras HTML
+    # 4️⃣ Remove tags ou caracteres estranhos
     texto = re.sub(r"<[^>]+>", "", texto)
+    texto = re.sub(r"[_*~#><]", "", texto)
+
+    # 5️⃣ Corrige pontuação e espaços
     texto = re.sub(r"\s+", " ", texto).strip()
-
-    # 6️⃣ Corrige padrões conhecidos de erro
-    substituicoes = {
-        "R2": "R$ 2", "R3": "R$ 3", "R4": "R$ 4", "R5": "R$ 5", "R6": "R$ 6",
-        "R7": "R$ 7", "R8": "R$ 8", "R9": "R$ 9", "R1": "R$ 1",
-        "Reele": "R$ e ele",  # caso clássico: 'R5eele'
-    }
-    for erro, certo in substituicoes.items():
-        texto = texto.replace(erro, certo)
-
-    # 7️⃣ Normaliza espaços e pontuação
     texto = re.sub(r"\s+([.,!?])", r"\1", texto)
-    texto = re.sub(r"\s+", " ", texto).strip()
+
+    # 6️⃣ Corrige padrões conhecidos
+    texto = texto.replace("R2", "R$ 2").replace("R3", "R$ 3").replace("R4", "R$ 4")
+    texto = texto.replace("R5", "R$ 5").replace("R6", "R$ 6").replace("R7", "R$ 7")
+    texto = texto.replace("R8", "R$ 8").replace("R9", "R$ 9").replace("R1", "R$ 1")
 
     return texto
 
