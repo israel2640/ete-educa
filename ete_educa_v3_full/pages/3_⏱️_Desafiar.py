@@ -156,6 +156,7 @@ elif st.session_state.fase == "resultado":
         materia_key = normalizar_materia(st.session_state.materia)
 
         progress[user][materia_key]["simulados"] = progress[user][materia_key].get("simulados", 0) + 1
+        progress[user]["nivel_atual"] = nivel
         save_progress(progress)
 
         if st.button("🔁 Refazer Simulado"):

@@ -164,7 +164,8 @@ def ensure_user(progress, user, password):
             "portugues": {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0},
             "matematica": {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0},
             "reforco": [],
-            "plano_14_dias": {str(dia+1): False for dia in range(14)} # <--- CORRIGIDO (plano_14_dias)
+            "plano_14_dias": {str(dia+1): False for dia in range(14)}, # <--- CORRIGIDO (plano_14_dias)
+            "nivel_atual": "Bronze"
         }
     
     # Garante que as chaves de matéria existam (para perfis antigos)

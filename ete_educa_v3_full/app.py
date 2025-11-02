@@ -19,24 +19,29 @@ st.divider()
 # --- 1. SE O ALUNO JÁ ESTÁ LOGADO ---
 if st.session_state.user:
     user = st.session_state.user
-    # Não precisa de senha aqui, pois ele já passou pela verificação
-    ensure_user(progress, user, "") # Apenas garante que as chaves de progresso existam
+    ensure_user(progress, user, "") # Garante que o usuário existe
     
     st.header(f"Olá, {user}! 👋")
     st.success(f"Você está logado como **{user}**. Use o menu ao lado para navegar.")
     
-    # --- NOSSO DASHBOARD DE "GAMIFICAÇÃO" ---
+    # --- NOSSO DASHBOARD DE "GAMIFICAÇÃO" (Versão CORRIGIDA) ---
     st.subheader("Seu Progresso Atual")
     
+    # Carrega dados do usuário
     user_data = progress[user]
     reforco_count = len(user_data.get("reforco", []))
     badges_port = len(user_data.get("portugues", {}).get("badges", []))
     badges_mat = len(user_data.get("matematica", {}).get("badges", []))
     
+    # --- ESTA É A LINHA QUE FALTAVA ---
+    nivel_aluno = user_data.get("nivel_atual", "Bronze") # Pega o nível salvo
+    
+    
+    # --- ESTAS SÃO AS COLUNAS CORRIGIDAS ---
     col1, col2, col3 = st.columns(3)
-    col1.metric("🧠 Itens no Reforço", reforco_count)
-    col2.metric("📚 Badges (Português)", badges_port)
-    col3.metric("🧮 Badges (Matemática)", badges_mat)
+    col1.metric("🏆 Meu Nível", nivel_aluno) # EXIBE O NÍVEL
+    col2.metric("🧠 Itens no Reforço", reforco_count)
+    col3.metric("📚 Badges Concluídos", badges_port + badges_mat)
 
     if reforco_count > 0:
         st.info("Você tem itens pendentes na página '🧠 Reforço'. Não se esqueça de revisar!")
