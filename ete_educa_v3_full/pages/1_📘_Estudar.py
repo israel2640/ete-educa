@@ -7,7 +7,7 @@ from data.questoes import questoes_portugues, questoes_matematica
 # =====================================================
 # 🔹 Configuração da página
 # =====================================================
-st.set_page_config(page_title="📘 Estudar — ETE Educa", page_icon="📘", layout="centered")
+st.set_page_config(page_title="Estudar — ETE Educa", layout="centered")
 st.title("📘 Estudar — Mini Aulas Interativas")
 st.caption("Aprenda os principais temas do edital da ETE com explicações da IA 🤖")
 
