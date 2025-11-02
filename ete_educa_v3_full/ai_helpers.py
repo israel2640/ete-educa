@@ -1,3 +1,4 @@
+import html
 import os
 import json
 import re
@@ -246,3 +247,42 @@ def ask_quick_question(pergunta: str) -> str:
     )
     user = f"Dúvida da aluna: {pergunta}"
     return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1)
+import html
+
+def limpar_texto_pergunta(texto: str) -> str:
+    """
+    Corrige erros de codificação que o modelo pode gerar
+    (ex: R2eumlanchcustaRx → R$ 2 e um lanche custa R$ x)
+    """
+    if not texto:
+        return texto
+
+    # Corrige caracteres HTML escapados (como &euml;)
+    texto = html.unescape(texto)
+
+    # Substituições comuns de confusão
+    substituicoes = {
+        "R2": "R$ 2",
+        "Rx": "R$ x",
+        "R3": "R$ 3",
+        "R4": "R$ 4",
+        "R5": "R$ 5",
+        "R6": "R$ 6",
+        "R7": "R$ 7",
+        "R8": "R$ 8",
+        "R9": "R$ 9",
+        "R1": "R$ 1",
+        "euml": "e",
+        "auml": "a",
+        "ouml": "o",
+        "nbsp": " ",
+    }
+
+    for erro, correto in substituicoes.items():
+        texto = texto.replace(erro, correto)
+
+    # Remove múltiplos espaços e junta corretamente
+    texto = re.sub(r"\s+", " ", texto).strip()
+
+    return texto
+
