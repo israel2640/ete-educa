@@ -1,118 +1,125 @@
 import streamlit as st
-import unicodedata
-from ai_helpers import generate_new_question
+import sympy as sp
+import re
+from ai_helpers import generate_new_question, explain_like_coach
 
-st.set_page_config(page_title="✨ Modo Livre — ETE Educa", page_icon="✨", layout="centered")
-st.title("✨ Modo Livre — Prática Infinita")
-st.caption("A IA vai gerar perguntas inéditas para você no estilo da prova!")
+st.set_page_config(page_title="Modo Livre — ETE Educa", page_icon="⚡", layout="centered")
 
-# --- Listas de Tópicos do Edital ---
-# (Baseado no edital que você forneceu)
+st.title("⚡ Modo Livre")
+st.caption("Gere questões inéditas com IA — agora com verificação automática de cálculos 🔍")
 
-topicos_portugues = [
-    "Compreensão de Texto (Ideias Principais)",
-    "Textualidade (Coesão e Coerência)",
-    "Gêneros Textuais e Sequências",
-    "Semântica (Sentido das Palavras)",
-    "Figuras de Linguagem (Conotação/Denotação)",
-    "Norma Padrão e Variedades Linguísticas",
-    "Estrutura e Formação das Palavras",
-    "Classes Gramaticais",
-    "Conectivos (Coordenação e Subordinação)",
-    "Pontuação",
-    "Concordância e Regência",
-    "Crase"
-]
+st.markdown("---")
 
-topicos_matematica = [
-    "Problemas com as Quatro Operações",
-    "Operações com Frações",
-    "Operações com Números Decimais",
-    "Potenciação",
-    "Raiz Quadrada Exata",
-    "Expressões com Números Reais (PEMDAS)",
-    "Sistemas de Medidas",
-    "Razão e Proporção",
-    "Divisão Proporcional",
-    "Regra de Três Simples",
-    "Regra de Três Composta",
-    "Porcentagem",
-    "Médias",
-    "Polinômios (Valor Numérico e Operações)",
-    "Produtos Notáveis",
-    "Fatoração",
-    "Radiciação (Simplificação de Raízes)",
-    "Equações Algébricas do 1º Grau",
-    "Sistemas Lineares do 1º Grau",
-    "Ângulos",
-    "Polígonos (Soma dos Ângulos)",
-    "Triângulos (Classificação e Lei Angular)",
-    "Semelhança de Triângulos (Teorema de Tales)",
-    "Cevianas (Mediana, Bissetriz, Altura)"
-]
+# ========================================
+# 🧭 Escolha de matéria e tópico
+# ========================================
+materia = st.selectbox(
+    "Escolha a matéria:",
+    ["Matemática", "Português", "Ciências", "História", "Geografia"]
+)
+topico = st.text_input("Digite um tópico (ex: potências, substantivos, ecossistemas):")
 
-# --- Interface do Modo Livre ---
+st.markdown("---")
 
-# Inicializa o estado
-if "new_question_data" not in st.session_state:
-    st.session_state.new_question_data = None
-if "reveal_answer" not in st.session_state:
-    st.session_state.reveal_answer = False
+if st.button("🎲 Gerar Questão com IA"):
+    if not topico.strip():
+        st.warning("Por favor, insira um tópico para gerar a questão.")
+        st.stop()
 
-# Seleção de Matéria e Tópico
-materia = st.radio("Escolha a matéria:", ["Português", "Matemática"], horizontal=True)
-if materia == "Português":
-    topico = st.selectbox("Escolha um tópico do edital:", topicos_portugues)
-else:
-    topico = st.selectbox("Escolha um tópico do edital:", topicos_matematica)
+    with st.spinner("Gerando questão com IA..."):
+        q = generate_new_question(materia, topico)
 
-# Botão de Gerar
-if st.button(f"Gerar Pergunta Inédita sobre {topico}"):
-    st.session_state.new_question_data = None # Limpa a questão anterior
-    st.session_state.reveal_answer = False # Esconde a resposta
-    with st.spinner(f"A IA está criando uma questão sobre {topico}..."):
+    if not q:
+        st.error("❌ Não foi possível gerar a questão. Tente novamente.")
+        st.stop()
+
+    st.session_state["questao_atual"] = q
+    st.session_state["resposta_certa"] = None
+    st.session_state["explicacao_final"] = None
+
+# ========================================
+# 📘 Exibir questão gerada
+# ========================================
+if "questao_atual" in st.session_state:
+    q = st.session_state["questao_atual"]
+
+    st.markdown("### 🧠 Questão Gerada pela IA:")
+    st.write(q["pergunta"])
+
+    # Mostra as alternativas
+    resposta_usuario = st.radio("Escolha sua resposta:", q["opcoes"], key="resposta_usuario")
+
+    # ========================================
+    # 🔍 Função para validar o cálculo matemático
+    # ========================================
+    def corrigir_expressao(expr_text):
+        """
+        Tenta resolver expressões simples (com ^, *, /, +, -) e retornar o resultado numérico.
+        """
         try:
-            st.session_state.new_question_data = generate_new_question(materia, topico)
-        except Exception as e:
-            st.error(f"Não foi possível conectar à IA. Verifique seu .env. Erro: {e}")
+            expr = expr_text.replace("^", "**")
+            result = sp.sympify(expr).evalf()
+            return float(result)
+        except Exception:
+            return None
 
-st.divider()
+    # ========================================
+    # 🧩 Verificação automática da resposta
+    # ========================================
+    if st.button("Revelar Resposta e Explicação"):
+        correta = q["correta"]
+        explicacao = q["explicacao"]
 
-# --- Exibição da Pergunta ---
-if st.session_state.new_question_data:
-    q_data = st.session_state.new_question_data
-    
-    st.subheader("Questão Gerada pela IA:")
-    st.markdown(q_data.get("pergunta", "Erro ao carregar pergunta."))
-    
-    # Exibe as opções de rádio
-    opcoes = q_data.get("opcoes", [])
-    if opcoes:
-        resposta_usuario = st.radio(
-            "Escolha sua resposta:", 
-            opcoes, 
-            index=None, # Deixa em branco por padrão
-            key="modo_livre_radio"
-        )
-        
-        # Botão para revelar
-        if st.button("Revelar Resposta e Explicação"):
-            st.session_state.reveal_answer = True
+        # 🔸 Verifica se há expressão matemática no enunciado
+        texto = q["pergunta"]
+        possiveis_expr = re.findall(r"[\d\(\)\+\-\*\/\^x\s]+", texto)
+        calculado = None
 
-        # Lógica de revelação
-        if st.session_state.reveal_answer:
-            correta = q_data.get("correta", "")
-            
-            if resposta_usuario == correta:
-                st.success(f"🎉 Você acertou! A resposta correta é: **{correta}**")
-                st.balloons()
-            else:
-                st.error(f"❌ Você marcou: {resposta_usuario}\nA resposta correta era: **{correta}**")
-            
-            st.subheader("Explicação do Mestre:")
-            st.info(q_data.get("explicacao", "Sem explicação disponível."))
-            
-            if st.button("Gerar Outra Pergunta"):
-                st.session_state.new_question_data = None
-                st.session_state.reveal_answer = False
-                st.rerun()
+        for trecho in possiveis_expr:
+            if any(op in trecho for op in ["^", "*", "+", "-"]):
+                calculado = corrigir_expressao(trecho)
+                break
+
+        # Corrige se o cálculo automático não bate com a resposta da IA
+        if calculado is not None:
+            if str(int(calculado)) not in correta and str(round(calculado, 2)) not in correta:
+                explicacao += f"\n\n⚠️ Correção automática: o cálculo simbólico indica que o resultado é **{calculado:.2f}**."
+                correta += f" (Corrigido pelo sistema)"
+
+        st.session_state["resposta_certa"] = correta
+        st.session_state["explicacao_final"] = explicacao
+
+# ========================================
+# 🧾 Mostrar feedback e explicação
+# ========================================
+if st.session_state.get("resposta_certa"):
+    correta = st.session_state["resposta_certa"]
+    explicacao = st.session_state["explicacao_final"]
+    resposta_usuario = st.session_state.get("resposta_usuario", "")
+
+    if resposta_usuario.strip() == correta.strip():
+        st.success(f"✅ Você acertou! A resposta correta era: {correta}")
+    else:
+        st.error(f"❌ Você marcou: {resposta_usuario}\n\nA resposta correta era: {correta}")
+
+    st.markdown("---")
+    st.markdown("### 🧑‍🏫 Explicação do Mestre:")
+
+    with st.spinner("Gerando explicação detalhada..."):
+        explicacao_ia = explain_like_coach(q["pergunta"], materia)
+
+    st.info(explicacao)
+    st.markdown("---")
+    st.markdown("### 💬 Explicação da IA (professora):")
+    st.write(explicacao_ia)
+
+    st.button("🔁 Gerar Outra Pergunta", on_click=lambda: st.session_state.clear())
+
+# ========================================
+# ⚠️ Aviso de segurança
+# ========================================
+st.markdown("---")
+st.caption(
+    "⚠️ As questões são criadas pela IA e verificadas automaticamente com cálculos simbólicos. "
+    "Mesmo assim, revise sempre o raciocínio — o objetivo é **treinar o pensamento**, não apenas decorar respostas. 🧩"
+)

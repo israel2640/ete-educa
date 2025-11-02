@@ -5,7 +5,7 @@ import sympy as sp
 from dataclasses import dataclass
 from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
-from typing import Dict
+from typing import Dict, Any, Literal
 
 # =====================================================
 # 🔹 Carrega variáveis do arquivo .env automaticamente
@@ -65,76 +65,22 @@ def _make_api_call(system_prompt: str, user_prompt: str, model: str, temperature
         return f"❌ Erro inesperado: {e}"
 
 # =====================================================
-# 🔹 Função de verificação automática de cálculo
-# =====================================================
-def validar_resposta_auto(q: dict):
-    """Valida se a resposta numérica faz sentido comparando com o enunciado."""
-    try:
-        texto = q.get("pergunta", "").lower()
-        correta = q.get("correta", "").lower()
-        if "x" in texto and "=" in texto:
-            x = sp.Symbol('x')
-            # Tenta capturar uma equação simples
-            partes = texto.replace("^", "**").split("=")
-            if len(partes) == 2:
-                eq = sp.Eq(sp.sympify(partes[0]), sp.sympify(partes[1]))
-                sol = sp.solve(eq, x)
-                if sol:
-                    valor_x = float(sol[0])
-                    # Se a resposta não contém o valor calculado, adiciona observação
-                    if str(int(valor_x)) not in correta and str(round(valor_x, 2)) not in correta:
-                        q["explicacao"] += f"\n\n⚠️ Verificação automática: " \
-                                           f"a IA indicou '{correta}', mas x ≈ {valor_x:.2f}."
-    except Exception:
-        pass
-    return q
-
-# =====================================================
-# 🔹 Explicação da IA (modo professora)
-# =====================================================
-def explain_like_coach(question_text: str, materia: str) -> str:
-    """Gera explicações educativas e carinhosas para aluna de 14 anos estudando para a ETE."""
-    system = (
-        "Você é uma professora particular paciente e carinhosa para uma aluna de 14 anos "
-        "que está estudando para o vestibular da ETE (Pernambuco). "
-        "Explique de forma simples e com exemplos do dia a dia. "
-        "Sempre divida a explicação em 3 blocos:\n"
-        "1️⃣ O Pulo do Gato\n2️⃣ Passo a Passo\n3️⃣ Por que as outras estão erradas\n"
-        "Finalize com uma dica divertida de memorização."
-    )
-
-    user = f"""
-Matéria: {materia}
-
-Questão:
-{question_text}
-
-Explique seguindo os 3 blocos e finalize com 1 dica curta de memorização.
-"""
-    return _make_api_call(
-        system_prompt=system,
-        user_prompt=user,
-        model="gpt-5-mini",
-        temperature=0.5
-    )
-
-# =====================================================
-# 🔹 Geração de nova questão com correção automática
+# 🔹 Geração de nova questão (A IA SÓ CRIA, NÃO RESOLVE)
 # =====================================================
 def generate_new_question(materia: str, topico: str) -> dict | None:
     """
-    Gera uma nova questão de múltipla escolha no estilo da ETE.
-    Aplica validação automática para detectar incoerências matemáticas.
+    A IA gera a pergunta, as opções e a string da equação.
+    O Python (SymPy) será o único responsável por resolvê-la.
     """
     system = (
         "Você é um assistente de IA especialista em criar questões para o vestibular da ETE. "
-        "Crie perguntas no formato de múltipla escolha (4 alternativas: a, b, c, d), "
-        "com o mesmo nível das provas anteriores. "
-        "\n\nREGRAS:\n"
-        "1. PRECISÃO MATEMÁTICA É PRIORIDADE MÁXIMA.\n"
-        "2. Resolva o cálculo passo a passo ANTES de escrever o JSON.\n"
-        "3. Valide o resultado final antes de gerar a alternativa correta.\n"
-        "4. Garanta que a resposta e a explicação estejam coerentes."
+        "Seu trabalho é criar uma pergunta de múltipla escolha (4 alternativas: a, b, c, d) sobre um tópico. "
+        "Você DEVE fornecer a equação matemática pura, em formato SymPy, em um campo separado para que um "
+        "computador possa resolvê-la e encontrar a resposta correta."
+        "\n\nREGRAS CRÍTICAS:\n"
+        "1. NÃO inclua a chave 'correta' no JSON. O computador irá calcular.\n"
+        "2. A 'equacao_para_sympy' DEVE ser uma string que o SymPy possa resolver.\n"
+        "3. A 'explicacao' deve ser um guia passo a passo genérico de como resolver."
     )
 
     user = f"""
@@ -145,17 +91,33 @@ Tópico: {topico}
 
 Responda apenas com JSON no formato:
 {{
-  "pergunta": "texto completo da questão",
-  "opcoes": ["a) ...", "b) ...", "c) ...", "d) ..."],
-  "correta": "b) ...",
-  "explicacao": "explicação clara e correta"
+  "pergunta": "Seja x um número real tal que 2^(2x + 1) = 64. Qual é o valor de x?",
+  "opcoes": ["a) 2", "b) 2.5", "c) 3", "d) 3.5"],
+  "equacao_para_sympy": "Eq(2**(2*x + 1), 64)",
+  "variavel_solucao": "x",
+  "explicacao": "Para resolver esta equação, primeiro reescrevemos 64 como 2^6. Isso nos dá 2^(2x+1) = 2^6. Como as bases são iguais, igualamos os expoentes: 2x + 1 = 6. Resolvendo para x, temos 2x = 5, e portanto x = 2.5."
+}}
+
+---
+
+Outro Exemplo (sem variável):
+Matéria: Matemática
+Tópico: Potenciação
+
+{{
+  "pergunta": "Qual é o valor de (3^4) * (3^-2)?",
+  "opcoes": ["a) 9", "b) 27", "c) 1", "d) 3"],
+  "equacao_para_sympy": "3**4 * 3**(-2)",
+  "variavel_solucao": null,
+  "explicacao": "Para resolver, usamos a propriedade da potência de mesma base: somamos os expoentes. Temos 3^(4 + (-2)), que é 3^2. O resultado é 9."
 }}
 """
+    
     json_string = _make_api_call(
         system_prompt=system,
         user_prompt=user,
         model="gpt-4o",
-        temperature=0.6,
+        temperature=0.7,
         response_format={"type": "json_object"}
     )
 
@@ -164,17 +126,85 @@ Responda apenas com JSON no formato:
         return None
 
     try:
-        q = json.loads(json_string)
-        q = validar_resposta_auto(q)
-        return q
+        return json.loads(json_string)
     except json.JSONDecodeError as e:
         print(f"Erro ao decodificar JSON: {e}")
         print(f"String recebida: {json_string}")
         return None
 
 # =====================================================
-# 🔹 Modo rápido (tira-dúvidas)
+# 🔹 FUNÇÃO DO "PROFESSOR CORRETOR" (PYTHON RESOLVE)
 # =====================================================
+def get_correct_answer_from_sympy(q_data: dict) -> tuple[str | None, str]:
+    """
+    Resolve a matemática usando SymPy para ENCONTRAR a resposta correta.
+    """
+    try:
+        equacao_str = q_data.get("equacao_para_sympy")
+        variavel_str = q_data.get("variavel_solucao")
+        opcoes = q_data.get("opcoes", [])
+        
+        if not equacao_str:
+            return None, "Erro: A IA não forneceu uma equação para verificar."
+            
+        # Simplifica a equação
+        expr = sp.sympify(equacao_str)
+        
+        solucao_final = None
+        
+        # Se for uma equação (ex: Eq(2*x, 64))
+        if isinstance(expr, sp.Equality) and variavel_str:
+            variavel = sp.symbols(variavel_str)
+            solucoes = sp.solve(expr, variavel)
+            if solucoes:
+                solucao_final = float(solucoes[0])
+        
+        # Se for uma expressão direta (ex: 3**4 * 3**(-2))
+        elif not variavel_str:
+            solucao_final = float(expr.evalf())
+
+        if solucao_final is None:
+            return None, f"Erro: SymPy não conseguiu resolver '{equacao_str}'."
+
+        # Agora, encontre a opção que bate com a solução
+        solucao_str_ponto = str(round(solucao_final, 2))      # "2.5"
+        solucao_str_virgula = solucao_str_ponto.replace('.', ',') # "2,5"
+        solucao_str_int = str(int(solucao_final))            # "2" ou "9"
+        
+        for opcao in opcoes:
+            # Remove a letra (ex: "a) ", "b) ") e espaços
+            opcao_limpa = re.sub(r"^[a-d]\)\s*", "", opcao.strip())
+            
+            # Compara com todos os formatos
+            if (
+                opcao_limpa == solucao_str_ponto or
+                opcao_limpa == solucao_str_virgula or
+                (solucao_final == int(solucao_final) and opcao_limpa == solucao_str_int)
+            ):
+                return opcao, "Cálculo verificado pelo Python." # Achamos a resposta correta!
+        
+        return None, f"Erro: Nenhuma opção corresponde à resposta correta ({solucao_final}). A IA criou opções erradas."
+
+    except Exception as e:
+        return None, f"Erro fatal no SymPy: {e}"
+
+
+# =====================================================
+# 🔹 Funções de texto (usam modelo mais barato)
+# =====================================================
+def explain_like_coach(question_text: str, materia: str) -> str:
+    """Gera explicações educativas e carinhosas (modo professora)."""
+    system = (
+        "Você é uma professora particular paciente e carinhosa para uma aluna de 14 anos "
+        "que está estudando para o vestibular da ETE (Pernambuco). "
+        "Explique de forma simples e com exemplos do dia a dia. "
+        "Sempre divida a explicação em 3 blocos:\n"
+        "1️⃣ O Pulo do Gato\n2️⃣ Passo a Passo\n3️⃣ Por que as outras estão erradas\n"
+        "Finalize com uma dica divertida de memorização."
+    )
+    user = f"Matéria: {materia}\n\nQuestão:\n{question_text}\n\nExplique seguindo os 3 blocos e finalize com 1 dica curta de memorização."
+    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=0.5)
+
 def ask_quick_question(pergunta: str) -> str:
     """Responde perguntas curtas de forma didática."""
     system = (
@@ -183,9 +213,4 @@ def ask_quick_question(pergunta: str) -> str:
         "Se for um conceito, dê uma frase explicando e um exemplo."
     )
     user = f"Dúvida da aluna: {pergunta}"
-    return _make_api_call(
-        system_prompt=system,
-        user_prompt=user,
-        model="gpt-5-mini",
-        temperature=0.3
-    )
+    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=0.3)
