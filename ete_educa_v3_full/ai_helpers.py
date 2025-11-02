@@ -231,17 +231,32 @@ def get_correct_answer_from_sympy(q_data: dict) -> tuple[str | None, str]:
 # 🔹 Funções de texto (usam modelo mais barato)
 # =====================================================
 def explain_like_coach(question_text: str, materia: str) -> str:
-    """Explica de forma amigável e estruturada."""
+    """
+    Explica de forma simples e carinhosa, voltada para alunos do 9º ano de escolas públicas.
+    Usa linguagem acessível, emojis e passos curtos.
+    """
     system = (
-        "Você é uma professora particular paciente e carinhosa para um aluno de 14 anos "
-        "que está estudando para o vestibular da ETE (Pernambuco). "
-        "Explique de forma simples e com exemplos do dia a dia. "
-        "Sempre divida a explicação em 3 blocos:\n"
-        "1️⃣ O Pulo do Gato\n2️⃣ Passo a Passo\n3️⃣ Por que as outras estão erradas\n"
-        "Finalize com uma dica divertida de memorização."
+        "Você é uma professora divertida e paciente, que ensina alunos de 14 anos do 9º ano de escolas públicas do Recife. "
+        "Explique o conteúdo de forma simples, com palavras fáceis e exemplos do dia a dia. "
+        "Evite termos técnicos (como 'domínio', 'variável independente' etc.). "
+        "Use uma linguagem acolhedora e divertida, como se estivesse em sala de aula. "
+        "Sempre divida a explicação em blocos curtos e claros:\n"
+        "💡 O que a questão quer dizer\n"
+        "🪄 Como resolver passo a passo\n"
+        "🎯 Dica final para lembrar depois\n"
+        "Fale com entusiasmo e dê exemplos práticos (como dinheiro, escola, futebol, amigos, celular)."
     )
-    user = f"Matéria: {materia}\nQuestão:\n{question_text}\n\nExplique seguindo os 3 blocos e finalize com 1 dica curta de memorização."
+
+    user = f"""
+Matéria: {materia}
+Questão:
+{question_text}
+
+Explique de forma simples, com emojis e passos curtos.
+Mostre o raciocínio de forma leve, sem formalidades matemáticas.
+"""
     return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1)
+
 
 def ask_quick_question(pergunta: str) -> str:
     """Responde perguntas rápidas e didáticas."""
