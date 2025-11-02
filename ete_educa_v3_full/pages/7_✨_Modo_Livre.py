@@ -157,6 +157,19 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
 
             # 🔹 Campo para o aluno perguntar sobre a explicação
             st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")
+
+            # Inicializa o campo e flag de limpeza
+            if "pergunta_aluno" not in st.session_state:
+                st.session_state.pergunta_aluno = ""
+            if "limpar_pergunta" not in st.session_state:
+                st.session_state.limpar_pergunta = False
+
+            # 🔹 Se a flag estiver ativada, limpa o campo antes de renderizar
+            if st.session_state.limpar_pergunta:
+                st.session_state.pergunta_aluno = ""
+                st.session_state.limpar_pergunta = False
+
+            # 🔹 Campo de entrada
             pergunta_aluno = st.text_input("Digite sua pergunta aqui:", key="pergunta_aluno")
 
             if pergunta_aluno:
@@ -165,10 +178,12 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
                         f"Matéria: {materia}\n\nExplicação: {explicacao_divertida}\n\nPergunta do aluno: {pergunta_aluno}"
                     )
                     st.markdown(f"🗣️ **Resposta da professora:** {resposta_duvida}")
+                    st.caption("💬 Pode fazer outra pergunta se quiser!")
 
-            # 🔹 Limpa o campo antes do rerun para evitar loop
-            st.session_state.pergunta_aluno = ""
-            st.rerun()
+                # 🔹 Marca para limpar o campo depois do reload
+                st.session_state.limpar_pergunta = True
+                st.rerun()
+
 
 
 
