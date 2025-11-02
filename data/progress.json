@@ -60,7 +60,8 @@
       "simulados": 0
     },
     "reforco": [
-      "MAT_10"
+      "MAT_10",
+      "POR_03"
     ],
     "nivel": "Bronze",
     "plano_14_dias": {
