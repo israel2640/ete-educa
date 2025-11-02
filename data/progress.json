@@ -38,7 +38,7 @@
   "Israel": {
     "password": "2640",
     "portugues": {
-      "treinos_ok": 2,
+      "treinos_ok": 3,
       "erros": [],
       "badges": [
         "POR_01",
@@ -60,8 +60,7 @@
       "simulados": 0
     },
     "reforco": [
-      "MAT_10",
-      "POR_03"
+      "MAT_10"
     ],
     "nivel": "Bronze",
     "plano_14_dias": {
