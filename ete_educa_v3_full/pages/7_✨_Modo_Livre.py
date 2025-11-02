@@ -3,13 +3,15 @@ import unicodedata
 import re
 import sympy as sp
 
-# 🔹 Funções principais de IA
+# 🔹 Importações corretas das funções de IA
 from ai_helpers import (
     generate_math_question,
     generate_portuguese_question,
     get_correct_answer_from_sympy,
-    explain_like_coach
+    explain_like_coach,      # para explicações divertidas
+    ask_quick_question       # para perguntas do aluno
 )
+
 
 # AQUI ESTÁ A MUDANÇA: importamos a nova função de verificação
 from ai_helpers import generate_math_question, generate_portuguese_question
@@ -118,10 +120,21 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
         st.markdown(q_data["texto"])
         st.divider()
 
+# --- Exibição da Pergunta ---
+if st.session_state.new_question_data and st.session_state.correct_answer_verified:
+    q_data = st.session_state.new_question_data
+
+    st.subheader("Questão Gerada pela IA:")
+
+    # 🔹 Exibir texto-base se existir
+    if "texto" in q_data and q_data["texto"].strip():
+        st.markdown("📘 **Texto-base:**")
+        st.markdown(q_data["texto"])
+        st.divider()
+
     # 🔹 Exibir a pergunta
     st.markdown(q_data.get("pergunta", "Erro ao carregar pergunta."))
 
-    
     opcoes = q_data.get("opcoes", [])
     if opcoes:
         resposta_usuario = st.radio(
@@ -151,7 +164,20 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
             explicacao_original = q_data.get("explicacao", "Sem explicação disponível.")
             explicacao_divertida = explain_like_coach(explicacao_original, materia)
 
-            st.markdown(explicacao_divertida)
+            # Exibe a explicação com um emoji
+            st.markdown(f"🧠 {explicacao_divertida}")
+
+            # 🔹 Campo para o aluno perguntar sobre a explicação
+            st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")
+            pergunta_aluno = st.text_input("Digite sua pergunta aqui:")
+
+            if pergunta_aluno:
+                with st.spinner("A professora está pensando... 🤔"):
+                    # A IA responde considerando o contexto da explicação
+                    resposta_duvida = ask_quick_question(
+                        f"Explicação: {explicacao_divertida}\n\nPergunta do aluno: {pergunta_aluno}"
+                    )
+                    st.markdown(f"🗣️ **Resposta da professora:** {resposta_duvida}")
 
             # --- Botão para gerar nova pergunta ---
             if st.button("Gerar Outra Pergunta"):
