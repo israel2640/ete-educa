@@ -69,89 +69,61 @@ def _make_api_call(system_prompt: str, user_prompt: str, model: str, temperature
 # =====================================================
 def generate_new_question(materia: str, topico: str) -> dict | None:
     """
-    Gera uma nova questão, adaptando o prompt e as regras de acordo com a matéria.
-    Totalmente verificado: matemática resolvida via SymPy e português com schema rígido JSON.
+    A IA gera a pergunta, as opções e a string da equação.
+    O Python (SymPy) será o único responsável por resolvê-la.
     """
+    
+    # --- PROMPT DE SISTEMA MELHORADO ---
+    system = (
+        "Você é um assistente de IA especialista em criar questões para o vestibular da ETE. "
+        "Seu trabalho é criar uma pergunta de múltipla escolha (4 alternativas: a, b, c, d) sobre um tópico. "
+        "Você DEVE fornecer a equação matemática pura, em formato SymPy, em um campo separado para que um "
+        "computador possa resolvê-la e verificar."
+        "\n\nREGRAS CRÍTICAS:\n"
+        "1. PRECISÃO MATEMÁTICA É PRIORIDADE MÁXIMA.\n"
+        "2. NÃO inclua a chave 'correta' no JSON. O computador irá calcular.\n"
+        "3. A 'equacao_para_sympy' DEVE ser uma string que o SymPy possa resolver.\n"
+        "4. A 'explicacao' deve ser um guia passo a passo, em tom AMIGÁVEL e ENCANTADOR, como se estivesse falando com um aluno de 14 anos. Use emojis (💡, 🤓, ✅) para guiar."
+    )
+    
+    # --- EXEMPLOS DO USUÁRIO MELHORADOS (COM O NOVO TOM) ---
+    user = f"""
+Gere uma (1) nova questão de múltipla escolha sobre o tópico abaixo.
 
-    # --- LÓGICA CONDICIONAL: MATEMÁTICA vs. PORTUGUÊS ---
-    if materia == "Matemática":
-        system = (
-            "Você é um assistente de IA especialista em criar questões de MATEMÁTICA para o vestibular da ETE. "
-            "Seu trabalho é criar uma pergunta de múltipla escolha (4 alternativas: a, b, c, d) sobre um tópico. "
-            "Você DEVE fornecer a equação matemática pura, em formato SymPy, em um campo separado para que um "
-            "computador possa resolvê-la e verificar."
-            "\n\nREGRAS CRÍTICAS:\n"
-            "1. PRECISÃO MATEMÁTICA É PRIORIDADE MÁXIMA.\n"
-            "2. NÃO inclua a chave 'correta' no JSON. O computador irá calcular.\n"
-            "3. A 'equacao_para_sympy' DEVE ser uma string que o SymPy possa resolver.\n"
-            "4. A 'explicacao' deve ser um guia passo a passo, em tom AMIGÁVEL e ENCANTADOR. Use emojis (💡, 🤓, ✅)."
-        )
+Matéria: {materia}
+Tópico: {topico}
 
-        user = f"""
-        Gere uma (1) nova questão de MATEMÁTICA sobre o tópico abaixo.
-        Matéria: {materia}
-        Tópico: {topico}
-        Responda apenas com JSON no formato (NÃO inclua a chave 'correta'):
-        {{
-          "pergunta": "Seja y um número real tal que 5^(y - 2) = 1/25. Qual é o valor de y?",
-          "opcoes": ["a) 0", "b) 1", "c) 2", "d) 3"],
-          "equacao_para_sympy": "Eq(5**(y - 2), 1/25)",
-          "variavel_solucao": "y",
-          "explicacao": "🤓 Ei, vamos lá! O truque aqui é 'igualar as bases'..."
-        }}
-        """
-        model = "gpt-4o"
+Responda apenas com JSON no formato:
+{{
+  "pergunta": "Seja y um número real tal que 5^(y - 2) = 1/25. Qual é o valor de y?",
+  "opcoes": ["a) 0", "b) 1", "c) 2", "d) 3"],
+  "equacao_para_sympy": "Eq(5**(y - 2), 1/25)",
+  "variavel_solucao": "y",
+  "explicacao": "🤓 Ei, vamos lá! O truque aqui é 'igualar as bases'.\n1. 💡 O lado esquerdo tem base 5. Precisamos reescrever o 1/25 como base 5.\n2. Lembre-se que 25 = 5^2. E quando o número está 'embaixo' (no denominador), o expoente fica negativo!\n3. Então, 1/25 = 5^(-2).\n4. Agora a equação fica: 5^(y - 2) = 5^(-2).\n5. ✅ Como as bases (o 5) são iguais, os expoentes têm que ser iguais! Então: y - 2 = -2.\n6. Resolvendo: y = -2 + 2, o que dá y = 0."
+}}
 
-    else:
-        # -------- PORTUGUÊS --------
-        system = (
-            "Você é um assistente de IA especialista em criar questões de PORTUGUÊS (ou Humanidades) para o vestibular da ETE. "
-            "Seu trabalho é criar uma pergunta de múltipla escolha (4 alternativas: a, b, c, d) sobre um tópico. "
-            "Você DEVE incluir a chave 'correta' com a resposta certa. "
-            "Respeite ESTRITAMENTE o formato JSON pedido. Não escreva explicações fora das chaves. "
-            "A 'explicacao' deve ser em tom AMIGÁVEL e ENCANTADOR. Use emojis (💡, 🤓, ✅)."
-        )
+---
 
-        user = f"""
-        Gere uma (1) nova questão de PORTUGUÊS sobre o tópico abaixo.
-        Matéria: {materia}
-        Tópico: {topico}
-        Responda apenas com JSON no formato abaixo (DEVE incluir a chave 'correta'):
-        {{
-          "pergunta": "Na frase 'Ele foi mal na prova, pois não estudou', a palavra 'pois' expressa:",
-          "opcoes": ["a) Consequência", "b) Condição", "c) Oposição", "d) Causa"],
-          "correta": "d) Causa",
-          "explicacao": "💡 'Pois' é uma conjunção explicativa/causal, indicando o motivo da ação."
-        }}
-        Gere algo similar, mas sobre o tópico solicitado, garantindo 4 alternativas e apenas 1 correta.
-        """
-        model = "gpt-4o-mini"  # 🔹 substitui gpt-5-mini — mais confiável e barato
+Outro Exemplo (sem variável):
+Matéria: Matemática
+Tópico: Potenciação
 
-    # --- FIM DA LÓGICA CONDICIONAL ---
-
+{{
+  "pergunta": "Qual é o valor de (3^4) * (3^-2)?",
+  "opcoes": ["a) 9", "b) 27", "c) 1", "d) 3"],
+  "equacao_para_sympy": "3**4 * 3**(-2)",
+  "variavel_solucao": null,
+  "explicacao": "💡 Esse é mais fácil do que parece! A regra de potência diz que quando multiplicamos números com a mesma base (a base aqui é 3), nós só precisamos SOMAR os expoentes.\n1. Os expoentes são 4 e -2.\n2. A conta é: 4 + (-2) = 2.\n3. Então, o resultado é 3^2 (três ao quadrado).\n4. ✅ 3^2 = 3 * 3 = 9."
+}}
+"""
+    
+    # AGORA A CHAMADA FUNCIONA
     json_string = _make_api_call(
         system_prompt=system,
         user_prompt=user,
-        model=model,
+        model="gpt-4o",
         temperature=0.7,
-        response_format={
-            "type": "json_object",
-            "schema": {
-                "name": "QuestaoETE",
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "pergunta": {"type": "string"},
-                        "opcoes": {"type": "array", "items": {"type": "string"}},
-                        "correta": {"type": "string"},
-                        "explicacao": {"type": "string"},
-                        "equacao_para_sympy": {"type": "string"},
-                        "variavel_solucao": {"type": "string"}
-                    },
-                    "required": ["pergunta", "opcoes", "explicacao"]
-                }
-            }
-        }
+        response_format={"type": "json_object"}
     )
 
     if json_string.startswith("❌"):
@@ -159,25 +131,11 @@ def generate_new_question(materia: str, topico: str) -> dict | None:
         return None
 
     try:
-        q = json.loads(json_string)
-
-        # --- Verificações finais ---
-        if materia == "Matemática":
-            if "correta" in q:
-                del q["correta"]
-        else:
-            # português precisa ter o gabarito e 4 opções válidas
-            if "correta" not in q or not isinstance(q.get("opcoes"), list) or len(q["opcoes"]) < 4:
-                print("Questão de português inválida ou incompleta.")
-                return None
-
-        return q
-
+        return json.loads(json_string)
     except json.JSONDecodeError as e:
         print(f"Erro ao decodificar JSON: {e}")
         print(f"String recebida: {json_string}")
         return None
-
 
 # =====================================================
 # 🔹 FUNÇÃO DO "PROFESSOR CORRETOR" (PYTHON RESOLVE)
@@ -250,7 +208,7 @@ def explain_like_coach(question_text: str, materia: str) -> str:
         "Finalize com uma dica divertida de memorização."
     )
     user = f"Matéria: {materia}\n\Questão:\n{question_text}\n\nExplique seguindo os 3 blocos e finalize com 1 dica curta de memorização."
-    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1.0)
+    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=0.5)
 
 def ask_quick_question(pergunta: str) -> str:
     """Responde perguntas curtas de forma didática."""
@@ -260,4 +218,4 @@ def ask_quick_question(pergunta: str) -> str:
         "Se for um conceito, dê uma frase explicando e um exemplo."
     )
     user = f"Dúvida da aluna: {pergunta}"
-    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1.0)
+    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=0.3)
