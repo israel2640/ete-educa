@@ -10,7 +10,7 @@ load_dotenv()
 @dataclass
 class AIConfig:
     api_key_env: str = "OPENAI_API_KEY"
-    model: str = "gpt-4o-mini"  # modelo rápido e econômico
+    model: str = "gpt-5-nano"  # modelo rápido e econômico
 
 def _client(cfg: AIConfig | None = None):
     cfg = cfg or AIConfig()
