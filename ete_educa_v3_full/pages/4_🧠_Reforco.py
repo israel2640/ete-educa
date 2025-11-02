@@ -87,7 +87,8 @@ for lesson in lessons:
             progress[user]["reforco"].remove(lesson["id"])
             save_progress(progress)
             st.success(f"Parabéns! O tema **{lesson['title']}** foi concluído e removido da lista de reforço. 🎯")
-            st.experimental_rerun()
+            st.rerun()
+
 
         
         st.divider()
