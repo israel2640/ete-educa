@@ -82,6 +82,13 @@ for lesson in lessons:
             for i, q in enumerate(lesson.get("train_questions", []), start=1):
                 st.markdown(f"**{i}. {q['q']}**")
                 st.info(f"💡 Explicação: {q.get('exp', 'Sem explicação cadastrada.')}")
+                        # --- NOVO BOTÃO: MARCAR COMO CONCLUÍDO ---
+        if st.button(f"✅ Marcar '{lesson['title']}' como concluído", key=f"done_{lesson['id']}"):
+            progress[user]["reforco"].remove(lesson["id"])
+            save_progress(progress)
+            st.success(f"Parabéns! O tema **{lesson['title']}** foi concluído e removido da lista de reforço. 🎯")
+            st.experimental_rerun()
+
         
         st.divider()
 
