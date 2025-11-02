@@ -256,19 +256,18 @@ import html
 
 def limpar_texto_pergunta(texto: str) -> str:
     """
-    Corrige erros de codificação que o modelo pode gerar
-    (ex: R2eumlanchcustaRx → R$ 2 e um lanche custa R$ x)
+    Corrige erros de codificação e HTML gerados pela IA,
+    como 'Sabendoquecadacal&amp;custaR' ou 'R2eumlanchcustaRx'.
     """
     if not texto:
         return texto
 
-    # Corrige caracteres HTML escapados (como &euml;)
+    # 1️⃣ Decodifica entidades HTML (&euml;, &ccedil;, etc.)
     texto = html.unescape(texto)
 
-    # Substituições comuns de confusão
+    # 2️⃣ Corrige símbolos monetários e comuns
     substituicoes = {
         "R2": "R$ 2",
-        "Rx": "R$ x",
         "R3": "R$ 3",
         "R4": "R$ 4",
         "R5": "R$ 5",
@@ -277,16 +276,28 @@ def limpar_texto_pergunta(texto: str) -> str:
         "R8": "R$ 8",
         "R9": "R$ 9",
         "R1": "R$ 1",
-        "euml": "e",
-        "auml": "a",
-        "ouml": "o",
-        "nbsp": " ",
+        "Rx": "R$ x",
+        # HTMLs e acentuação comuns
+        "&aacute;": "á", "&eacute;": "é", "&iacute;": "í", "&oacute;": "ó", "&uacute;": "ú",
+        "&atilde;": "ã", "&otilde;": "õ", "&acirc;": "â", "&ecirc;": "ê", "&ocirc;": "ô",
+        "&ccedil;": "ç", "&nbsp;": " ",
+        "euml": "e", "auml": "a", "ouml": "o",
+        "amp;": "",
     }
 
     for erro, correto in substituicoes.items():
         texto = texto.replace(erro, correto)
 
-    # Remove múltiplos espaços e junta corretamente
+    # 3️⃣ Adiciona espaços entre palavras coladas (ex: “Sabendoquecada” → “Sabendo que cada”)
+    texto = re.sub(r"([a-zá-ú])([A-ZÁ-Ú])", r"\1 \2", texto)
+    texto = re.sub(r"([a-zá-ú])([A-ZÁ-Ú])", r"\1 \2", texto)
+    texto = re.sub(r"([a-zá-ú])([A-ZÁ-Ú])", r"\1 \2", texto)
+
+    # 4️⃣ Substitui casos de letras coladas sem espaço (entre palavras)
+    texto = re.sub(r"([a-z])([A-Z])", r"\1 \2", texto)
+    texto = re.sub(r"([a-z])([A-Z])", r"\1 \2", texto)
+
+    # 5️⃣ Remove múltiplos espaços e pontuação redundante
     texto = re.sub(r"\s+", " ", texto).strip()
 
     return texto
