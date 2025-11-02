@@ -1,119 +1,242 @@
-import streamlit as st
-import unicodedata
+import os
+import json
 import re
 import sympy as sp
-# AQUI ESTÁ A MUDANÇA: importamos a nova função de verificação
-from ai_helpers import generate_new_question, get_correct_answer_from_sympy
+from dataclasses import dataclass
+from dotenv import load_dotenv
+from openai import OpenAI, OpenAIError
+from typing import Dict, Any, Literal
 
-# --- Configurações removidas (já fizemos a limpeza antes) ---
+# =====================================================
+# 🔹 Carrega variáveis do arquivo .env automaticamente
+# =====================================================
+load_dotenv()
 
-st.set_page_config(page_title="Modo Livre — ETE Educa", layout="centered")
-st.title("✨ Modo Livre — Prática Infinita (Verificada)")
-st.caption("A IA gera perguntas inéditas e o Python verifica a resposta para garantir 100% de precisão!")
+@dataclass
+class AIConfig:
+    api_key_env: str = "OPENAI_API_KEY"
 
-# --- Listas de Tópicos do Edital ---
-topicos_portugues = [
-    "Compreensão de Texto (Ideias Principais)", "Textualidade (Coesão e Coerência)",
-    "Gêneros Textuais e Sequências", "Semântica (Sentido das Palavras)",
-    "Figuras de Linguagem (Conotação/Denotação)", "Norma Padrão e Variedades Linguísticas",
-    "Estrutura e Formação das Palavras", "Classes Gramaticais",
-    "Conectivos (Coordenação e Subordinação)", "Pontuação",
-    "Concordância e Regência", "Crase"
-]
-topicos_matematica = [
-    "Problemas com as Quatro Operações", "Operações com Frações", "Operações com Números Decimais",
-    "Potenciação", "Raiz Quadrada Exata", "Expressões com Números Reais (PEMDAS)",
-    "Sistemas de Medidas", "Razão e Proporção", "Divisão Proporcional",
-    "Regra de Três Simples", "Regra de Três Composta", "Porcentagem", "Médias",
-    "Polinômios (Valor Numérico e Operações)", "Produtos Notáveis", "Fatoração",
-    "Radiciação (Simplificação de Raízes)", "Equações Algébricas do 1º Grau",
-    "Sistemas Lineares do 1º Grau", "Ângulos", "Polígonos (Soma dos Ângulos)",
-    "Triângulos (Classificação e Lei Angular)", "Semelhança de Triângulos (Teorema de Tales)",
-    "Cevianas (Mediana, Bissetriz, Altura)"
-]
+# =====================================================
+# 🔹 Inicialização segura do cliente
+# =====================================================
+def _client() -> OpenAI:
+    """Cria e valida o cliente OpenAI."""
+    cfg = AIConfig()
+    api_key = os.getenv(cfg.api_key_env)
 
-# --- Interface do Modo Livre ---
-if "new_question_data" not in st.session_state:
-    st.session_state.new_question_data = None
-if "reveal_answer" not in st.session_state:
-    st.session_state.reveal_answer = False
-if "correct_answer_verified" not in st.session_state:
-    st.session_state.correct_answer_verified = None
+    if not api_key:
+        raise RuntimeError(f"Defina {cfg.api_key_env} no arquivo .env.")
 
-materia = st.radio("Escolha a matéria:", ["Português", "Matemática"], horizontal=True)
-if materia == "Português":
-    topico = st.selectbox("Escolha um tópico do edital:", topicos_portugues)
-else:
-    topico = st.selectbox("Escolha um tópico do edital:", topicos_matematica)
+    if not api_key.startswith(("sk-", "sk-proj-")):
+        raise RuntimeError("Chave OPENAI_API_KEY inválida. Deve começar com 'sk-' ou 'sk-proj-'.")
 
-# Botão de Gerar
-if st.button(f"Gerar Pergunta Inédita sobre {topico}"):
-    st.session_state.new_question_data = None
-    st.session_state.reveal_answer = False
-    st.session_state.correct_answer_verified = None
+    try:
+        return OpenAI(api_key=api_key)
+    except Exception as e:
+        raise RuntimeError(f"Erro ao inicializar o cliente OpenAI: {e}")
+
+# =====================================================
+# 🔹 Função central de chamada à API (DEFINIDA AQUI)
+# =====================================================
+def _make_api_call(system_prompt: str, user_prompt: str, model: str, temperature: float,
+                   response_format: Dict[str, str] | None = None) -> str:
+    """Executa chamadas à API OpenAI com tratamento de erros."""
+    try:
+        client = _client()
+
+        call_params = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": temperature,
+        }
+
+        if response_format:
+            call_params["response_format"] = response_format
+
+        resp = client.chat.completions.create(**call_params)
+        return resp.choices[0].message.content.strip()
+
+    except OpenAIError as e:
+        return f"❌ Erro ao conectar à OpenAI: {e.message}\nVerifique sua chave e conexão."
+    except Exception as e:
+        return f"❌ Erro inesperado: {e}"
+
+# =====================================================
+# 🔹 Geração de nova questão (A IA SÓ CRIA, NÃO RESOLVE)
+# =====================================================
+def generate_new_question(materia: str, topico: str) -> dict | None:
+    """
+    Gera uma nova questão, adaptando o prompt e as regras de acordo com a matéria.
+    """
     
-    with st.spinner(f"A IA está criando uma questão sobre {topico}..."):
-        q_data = generate_new_question(materia, topico)
-        
-        if q_data:
-            st.session_state.new_question_data = q_data
-            
-            # --- O "PROFESSOR CORRETOR" ENTRA EM AÇÃO ---
-            if materia == "Matemática":
-                with st.spinner("Python (SymPy) está verificando a matemática da IA..."):
-                    correta_verificada, status = get_correct_answer_from_sympy(q_data)
-                    
-                    if correta_verificada:
-                        st.session_state.correct_answer_verified = correta_verificada
-                    else:
-                        st.error(f"Falha na verificação: {status}. A IA pode ter criado opções inválidas. Tente gerar outra.")
-                        st.session_state.new_question_data = None
-            else:
-                # Para Português: a IA já enviou a chave 'correta' no JSON
-                correta_verificada = q_data.get("correta")
-                if correta_verificada:
-                    st.session_state.correct_answer_verified = correta_verificada
-                else:
-                    st.error("Falha de Geração: A IA não forneceu a resposta correta para a pergunta de Português. Tente gerar novamente.")
-                    st.session_state.new_question_data = None
-
-
-st.divider()
-
-# --- Exibição da Pergunta ---
-if st.session_state.new_question_data and st.session_state.correct_answer_verified:
-    q_data = st.session_state.new_question_data
-    
-    st.subheader("Questão Gerada pela IA:")
-    st.markdown(q_data.get("pergunta", "Erro ao carregar pergunta."))
-    
-    opcoes = q_data.get("opcoes", [])
-    if opcoes:
-        resposta_usuario = st.radio(
-            "Escolha sua resposta:", 
-            opcoes, 
-            index=None,
-            key="modo_livre_radio"
+    # --- LÓGICA CONDICIONAL: MATEMÁTICA vs. PORTUGUÊS ---
+    if materia == "Matemática":
+        system = (
+            "Você é um assistente de IA especialista em criar questões de MATEMÁTICA para o vestibular da ETE. "
+            "Seu trabalho é criar uma pergunta de múltipla escolha (4 alternativas: a, b, c, d) sobre um tópico. "
+            "Você DEVE fornecer a equação matemática pura, em formato SymPy, em um campo separado para que um "
+            "computador possa resolvê-la e verificar."
+            "\n\nREGRAS CRÍTICAS:\n"
+            "1. PRECISÃO MATEMÁTICA É PRIORIDADE MÁXIMA.\n"
+            "2. NÃO inclua a chave 'correta' no JSON. O computador irá calcular.\n"
+            "3. A 'equacao_para_sympy' DEVE ser uma string que o SymPy possa resolver.\n"
+            "4. A 'explicacao' deve ser um guia passo a passo, em tom AMIGÁVEL e ENCANTADOR. Use emojis (💡, 🤓, ✅)."
         )
         
-        if st.button("Revelar Resposta e Explicação"):
-            st.session_state.reveal_answer = True
+        user = f"""
+        Gere uma (1) nova questão de MATEMÁTICA sobre o tópico abaixo.
+        Matéria: {materia}
+        Tópico: {topico}
+        Responda apenas com JSON no formato (NÃO inclua a chave 'correta'):
+        {{
+          "pergunta": "Seja y um número real tal que 5^(y - 2) = 1/25. Qual é o valor de y?",
+          "opcoes": ["a) 0", "b) 1", "c) 2", "d) 3"],
+          "equacao_para_sympy": "Eq(5**(y - 2), 1/25)",
+          "variavel_solucao": "y",
+          "explicacao": "🤓 Ei, vamos lá! O truque aqui é 'igualar as bases'..."
+        }}
+        """
+        model = "gpt-4o"
+        
+    else: # (Português e outras matérias de texto)
+        system = (
+            "Você é um assistente de IA especialista em criar questões de PORTUGUÊS (ou Humanidades) para o vestibular da ETE. "
+            "Seu trabalho é criar uma pergunta de múltipla escolha (4 alternativas: a, b, c, d) sobre um tópico. "
+            "Você DEVE incluir a chave 'correta' com a resposta certa."
+            "A 'explicacao' deve ser em tom AMIGÁVEL e ENCANTADOR. Use emojis (💡, 🤓, ✅)."
+        )
+        
+        user = f"""
+        Gere uma (1) nova questão de PORTUGUÊS sobre o tópico abaixo.
+        Matéria: {materia}
+        Tópico: {topico}
+        Responda apenas com JSON no formato (DEVE incluir a chave 'correta'):
+        {{
+          "pergunta": "Na frase 'Ele foi mal na prova, POIS não estudou', a palavra 'POIS' é a:",
+          "opcoes": ["a) Causa", "b) Consequência", "c) Oposição", "d) Finalidade"],
+          "correta": "a) Causa",
+          "explicacao": "🤓 Acertou! A palavra 'POIS' é uma conjunção explicativa, que dá a causa ou o motivo de algo."
+        }}
+        """
+        model = "gpt-5-mini" # Mais barato para texto
 
-        if st.session_state.reveal_answer:
-            # A RESPOSTA CORRETA AGORA VEM DA VERIFICAÇÃO FINAL
-            correta = st.session_state.correct_answer_verified
+    # --- FIM DA LÓGICA CONDICIONAL ---
+    
+    json_string = _make_api_call(
+        system_prompt=system,
+        user_prompt=user,
+        model=model,
+        temperature=0.7,
+        response_format={"type": "json_object"}
+    )
+
+    if json_string.startswith("❌"):
+        print(f"Erro ao gerar questão: {json_string}")
+        return None
+
+    try:
+        q = json.loads(json_string)
+        
+        # --- LÓGICA DE VERIFICAÇÃO FINAL ---
+        # Se for MATEMÁTICA, removemos a chave 'correta' (pois o SymPy vai calcular depois)
+        if materia == "Matemática":
+            if "correta" in q:
+                del q["correta"] 
+                
+        # Se for PORTUGUÊS, precisamos garantir que a chave 'correta' exista
+        else:
+            if "correta" not in q:
+                return None # A IA falhou em dar o gabarito
+                
+        return q
+        
+    except json.JSONDecodeError as e:
+        print(f"Erro ao decodificar JSON: {e}")
+        print(f"String recebida: {json_string}")
+        return None
+
+# =====================================================
+# 🔹 FUNÇÃO DO "PROFESSOR CORRETOR" (PYTHON RESOLVE)
+# =====================================================
+def get_correct_answer_from_sympy(q_data: dict) -> tuple[str | None, str]:
+    """
+    Resolve a matemática usando SymPy para ENCONTRAR a resposta correta.
+    """
+    try:
+        equacao_str = q_data.get("equacao_para_sympy")
+        variavel_str = q_data.get("variavel_solucao")
+        opcoes = q_data.get("opcoes", [])
+        
+        if not equacao_str:
+            return None, "Erro: A IA não forneceu uma equação para verificar."
             
-            if resposta_usuario == correta:
-                st.success(f"🎉 Você acertou! A resposta correta (verificada pelo Python) é: **{correta}**")
-                st.balloons()
-            else:
-                st.error(f"❌ Você marcou: {resposta_usuario}\nA resposta correta (verificada pelo Python) era: **{correta}**")
+        # Simplifica a equação
+        expr = sp.sympify(equacao_str)
+        
+        solucao_final = None
+        
+        # Se for uma equação (ex: Eq(2*x, 64))
+        if isinstance(expr, sp.Equality) and variavel_str:
+            variavel = sp.symbols(variavel_str)
+            solucoes = sp.solve(expr, variavel)
+            if solucoes:
+                solucao_final = float(solucoes[0])
+        
+        # Se for uma expressão direta (ex: 3**4 * 3**(-2))
+        elif not variavel_str:
+            solucao_final = float(expr.evalf())
+
+        if solucao_final is None:
+            return None, f"Erro: SymPy não conseguiu resolver '{equacao_str}'."
+
+        # Agora, encontre a opção que bate com a solução
+        solucao_str_ponto = str(round(solucao_final, 2))      # "2.5"
+        solucao_str_virgula = solucao_str_ponto.replace('.', ',') # "2,5"
+        solucao_str_int = str(int(solucao_final))            # "2" ou "9"
+        
+        for opcao in opcoes:
+            # Remove a letra (ex: "a) ", "b) ") e espaços
+            opcao_limpa = re.sub(r"^[a-d]\)\s*", "", opcao.strip())
             
-            st.subheader("Explicação do Mestre:")
-            st.info(q_data.get("explicacao", "Sem explicação disponível."))
-            
-            if st.button("Gerar Outra Pergunta"):
-                st.session_state.new_question_data = None
-                st.session_state.reveal_answer = False
-                st.session_state.correct_answer_verified = None
-                st.rerun()
+            # Compara com todos os formatos
+            if (
+                opcao_limpa == solucao_str_ponto or
+                opcao_limpa == solucao_str_virgula or
+                (solucao_final == int(solucao_final) and opcao_limpa == solucao_str_int)
+            ):
+                return opcao, "Cálculo verificado pelo Python." # Achamos a resposta correta!
+        
+        return None, f"Erro: Nenhuma opção ({[op for op in opcoes]}) corresponde à resposta correta ({solucao_final}). A IA criou opções inválidas."
+
+    except Exception as e:
+        return None, f"Erro fatal no SymPy: {e}"
+
+
+# =====================================================
+# 🔹 Funções de texto (usam modelo mais barato)
+# =====================================================
+def explain_like_coach(question_text: str, materia: str) -> str:
+    """Gera explicações educativas e carinhosas (modo professora)."""
+    system = (
+        "Você é uma professora particular paciente e carinhosa para uma aluna de 14 anos "
+        "que está estudando para o vestibular da ETE (Pernambuco). "
+        "Explique de forma simples e com exemplos do dia a dia. "
+        "Sempre divida a explicação em 3 blocos:\n"
+        "1️⃣ O Pulo do Gato\n2️⃣ Passo a Passo\n3️⃣ Por que as outras estão erradas\n"
+        "Finalize com uma dica divertida de memorização."
+    )
+    user = f"Matéria: {materia}\n\Questão:\n{question_text}\n\nExplique seguindo os 3 blocos e finalize com 1 dica curta de memorização."
+    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1.0)
+
+def ask_quick_question(pergunta: str) -> str:
+    """Responde perguntas curtas de forma didática."""
+    system = (
+        "Você é um professor tira-dúvidas da ETE. "
+        "Explique de forma simples, direta e com exemplos. "
+        "Se for um conceito, dê uma frase explicando e um exemplo."
+    )
+    user = f"Dúvida da aluna: {pergunta}"
+    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1.0)
