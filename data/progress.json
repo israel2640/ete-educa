@@ -43,7 +43,8 @@
       "badges": [
         "POR_01",
         "POR_02",
-        "POR_03"
+        "POR_03",
+        "POR_04"
       ],
       "simulados": 0
     },
@@ -51,7 +52,10 @@
       "treinos_ok": 0,
       "erros": [],
       "badges": [
-        "MAT_01"
+        "MAT_01",
+        "MAT_02",
+        "MAT_03",
+        "MAT_04"
       ],
       "simulados": 0
     },
