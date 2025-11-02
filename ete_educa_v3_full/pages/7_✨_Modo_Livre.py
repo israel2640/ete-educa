@@ -3,11 +3,12 @@ import unicodedata
 import re
 import sympy as sp
 
-# 🔹 Importações corretas das funções de IA
+# 🔹 Funções principais de IA
 from ai_helpers import (
     generate_math_question,
     generate_portuguese_question,
-    get_correct_answer_from_sympy
+    get_correct_answer_from_sympy,
+    explain_like_coach
 )
 
 # AQUI ESTÁ A MUDANÇA: importamos a nova função de verificação
@@ -144,7 +145,12 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
                 st.error(f"❌ Você marcou: {resposta_usuario}\nA resposta correta (verificada pelo Python) era: **{correta}**")
             
             st.subheader("Explicação do Mestre:")
-            st.info(q_data.get("explicacao", "Sem explicação disponível."))
+
+            # 🔹 Usa a função divertida da professora do 9º ano
+            explicacao_original = q_data.get("explicacao", "Sem explicação disponível.")
+            explicacao_divertida = explain_like_coach(explicacao_original, materia)
+
+            st.markdown(explicacao_divertida)
             
             if st.button("Gerar Outra Pergunta"):
                 st.session_state.new_question_data = None
