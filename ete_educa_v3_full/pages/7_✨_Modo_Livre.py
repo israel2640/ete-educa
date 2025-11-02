@@ -2,8 +2,15 @@ import streamlit as st
 import unicodedata
 import re
 import sympy as sp
+
+# 🔹 Importações corretas das funções de IA
+from ai_helpers import (
+    generate_math_question,
+    generate_portuguese_question,
+    get_correct_answer_from_sympy
+)
+
 # AQUI ESTÁ A MUDANÇA: importamos a nova função de verificação
-from ai_helpers import generate_new_question, get_correct_answer_from_sympy
 from ai_helpers import generate_math_question, generate_portuguese_question
 
 st.set_page_config(page_title="Modo Livre — ETE Educa", layout="centered")
