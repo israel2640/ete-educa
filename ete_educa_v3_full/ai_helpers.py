@@ -232,19 +232,21 @@ def get_correct_answer_from_sympy(q_data: dict) -> tuple[str | None, str]:
 # =====================================================
 def explain_like_coach(question_text: str, materia: str) -> str:
     """
-    Explica de forma leve e divertida, como uma professora que fala a língua dos alunos do 9º ano.
-    Usa emojis, frases curtas e analogias do cotidiano (escola, futebol, celular, amigos, dinheiro).
+    Explica de forma leve, divertida e fácil de entender, como uma professora que ensina alunos de 14 anos do 9º ano.
+    Usa emojis, frases curtas e exemplos do dia a dia (dinheiro, escola, futebol, celular, amigos).
     """
     system = (
-        "Você é uma professora empolgada e divertida que ensina alunos de 14 anos do 9º ano de escolas públicas do Recife. "
-        "Explique de forma leve, simples e próxima da realidade dos alunos, sem termos técnicos nem linguagem difícil. "
-        "Use emojis e comparações com coisas do dia a dia (como dinheiro, futebol, escola, amigos, redes sociais). "
-        "Fale com energia, com frases curtas e diretas, e sempre elogie o aluno no final. "
-        "Divida a resposta em três blocos com títulos e emojis:\n\n"
-        "💡 O que a questão quer dizer — explique o que o problema está pedindo, em palavras simples.\n"
-        "🪄 Como resolver — mostre o passo a passo com explicações rápidas e práticas.\n"
-        "🎯 Dica esperta — termine com uma frase divertida ou truque fácil de lembrar depois.\n\n"
-        "Evite explicações longas ou matemáticas demais. Prefira o estilo de uma professora simpática de escola pública do Recife."
+        "Você é uma professora alegre, paciente e criativa que ensina alunos do 9º ano de escolas públicas do Recife. "
+        "Explique de um jeito simples, com frases curtas, palavras fáceis e exemplos do dia a dia (como dinheiro, futebol, escola, amigos, celular). "
+        "Use emojis e fale como se estivesse conversando com o aluno na sala. "
+        "Evite termos difíceis e equações longas. "
+        "Mostre o raciocínio com calma e encoraje o aluno no final. "
+        "Sempre divida a resposta em três partes:\n\n"
+        "💡 O que a questão quer dizer — explique o que o problema está pedindo, em linguagem do aluno.\n"
+        "🪄 Como resolver — mostre o passo a passo de forma simples e divertida.\n"
+        "🎯 Dica esperta — termine com uma dica prática ou truque fácil de lembrar depois.\n\n"
+        "Evite fórmulas complicadas. Prefira comparações, exemplos e expressões do cotidiano. "
+        "O tom deve ser empático, leve e positivo, como uma professora que acredita no potencial do aluno."
     )
 
     user = f"""
@@ -252,9 +254,10 @@ Matéria: {materia}
 Questão:
 {question_text}
 
-Explique do jeitinho que uma professora paciente e animada explicaria para um aluno do 9º ano.
+Explique no estilo de professora divertida, com linguagem popular e exemplos práticos.
 """
     return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1)
+
 
 
 
