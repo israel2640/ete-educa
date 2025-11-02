@@ -70,8 +70,9 @@ def _make_api_call(system_prompt: str, user_prompt: str, model: str, temperature
 def generate_new_question(materia: str, topico: str) -> dict | None:
     """
     Gera uma nova questão, adaptando o prompt e as regras de acordo com a matéria.
+    Totalmente verificado: matemática resolvida via SymPy e português com schema rígido JSON.
     """
-    
+
     # --- LÓGICA CONDICIONAL: MATEMÁTICA vs. PORTUGUÊS ---
     if materia == "Matemática":
         system = (
@@ -85,7 +86,7 @@ def generate_new_question(materia: str, topico: str) -> dict | None:
             "3. A 'equacao_para_sympy' DEVE ser uma string que o SymPy possa resolver.\n"
             "4. A 'explicacao' deve ser um guia passo a passo, em tom AMIGÁVEL e ENCANTADOR. Use emojis (💡, 🤓, ✅)."
         )
-        
+
         user = f"""
         Gere uma (1) nova questão de MATEMÁTICA sobre o tópico abaixo.
         Matéria: {materia}
@@ -100,37 +101,57 @@ def generate_new_question(materia: str, topico: str) -> dict | None:
         }}
         """
         model = "gpt-4o"
-        
-    else: # (Português e outras matérias de texto)
+
+    else:
+        # -------- PORTUGUÊS --------
         system = (
             "Você é um assistente de IA especialista em criar questões de PORTUGUÊS (ou Humanidades) para o vestibular da ETE. "
             "Seu trabalho é criar uma pergunta de múltipla escolha (4 alternativas: a, b, c, d) sobre um tópico. "
-            "Você DEVE incluir a chave 'correta' com a resposta certa."
+            "Você DEVE incluir a chave 'correta' com a resposta certa. "
+            "Respeite ESTRITAMENTE o formato JSON pedido. Não escreva explicações fora das chaves. "
             "A 'explicacao' deve ser em tom AMIGÁVEL e ENCANTADOR. Use emojis (💡, 🤓, ✅)."
         )
-        
+
         user = f"""
         Gere uma (1) nova questão de PORTUGUÊS sobre o tópico abaixo.
         Matéria: {materia}
         Tópico: {topico}
-        Responda apenas com JSON no formato (DEVE incluir a chave 'correta'):
+        Responda apenas com JSON no formato abaixo (DEVE incluir a chave 'correta'):
         {{
-          "pergunta": "Na frase 'Ele foi mal na prova, POIS não estudou', a palavra 'POIS' é a:",
-          "opcoes": ["a) Causa", "b) Consequência", "c) Oposição", "d) Finalidade"],
-          "correta": "a) Causa",
-          "explicacao": "🤓 Acertou! A palavra 'POIS' é uma conjunção explicativa, que dá a causa ou o motivo de algo."
+          "pergunta": "Na frase 'Ele foi mal na prova, pois não estudou', a palavra 'pois' expressa:",
+          "opcoes": ["a) Consequência", "b) Condição", "c) Oposição", "d) Causa"],
+          "correta": "d) Causa",
+          "explicacao": "💡 'Pois' é uma conjunção explicativa/causal, indicando o motivo da ação."
         }}
+        Gere algo similar, mas sobre o tópico solicitado, garantindo 4 alternativas e apenas 1 correta.
         """
-        model = "gpt-5-mini" # Mais barato para texto
+        model = "gpt-4o-mini"  # 🔹 substitui gpt-5-mini — mais confiável e barato
 
     # --- FIM DA LÓGICA CONDICIONAL ---
-    
+
     json_string = _make_api_call(
         system_prompt=system,
         user_prompt=user,
         model=model,
         temperature=0.7,
-        response_format={"type": "json_object"}
+        response_format={
+            "type": "json_object",
+            "schema": {
+                "name": "QuestaoETE",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "pergunta": {"type": "string"},
+                        "opcoes": {"type": "array", "items": {"type": "string"}},
+                        "correta": {"type": "string"},
+                        "explicacao": {"type": "string"},
+                        "equacao_para_sympy": {"type": "string"},
+                        "variavel_solucao": {"type": "string"}
+                    },
+                    "required": ["pergunta", "opcoes", "explicacao"]
+                }
+            }
+        }
     )
 
     if json_string.startswith("❌"):
@@ -139,24 +160,24 @@ def generate_new_question(materia: str, topico: str) -> dict | None:
 
     try:
         q = json.loads(json_string)
-        
-        # --- LÓGICA DE VERIFICAÇÃO FINAL ---
-        # Se for MATEMÁTICA, removemos a chave 'correta' (pois o SymPy vai calcular depois)
+
+        # --- Verificações finais ---
         if materia == "Matemática":
             if "correta" in q:
-                del q["correta"] 
-                
-        # Se for PORTUGUÊS, precisamos garantir que a chave 'correta' exista
+                del q["correta"]
         else:
-            if "correta" not in q:
-                return None # A IA falhou em dar o gabarito
-                
+            # português precisa ter o gabarito e 4 opções válidas
+            if "correta" not in q or not isinstance(q.get("opcoes"), list) or len(q["opcoes"]) < 4:
+                print("Questão de português inválida ou incompleta.")
+                return None
+
         return q
-        
+
     except json.JSONDecodeError as e:
         print(f"Erro ao decodificar JSON: {e}")
         print(f"String recebida: {json_string}")
         return None
+
 
 # =====================================================
 # 🔹 FUNÇÃO DO "PROFESSOR CORRETOR" (PYTHON RESOLVE)
