@@ -4,6 +4,7 @@ import re
 import sympy as sp
 # AQUI ESTÁ A MUDANÇA: importamos a nova função de verificação
 from ai_helpers import generate_new_question, get_correct_answer_from_sympy
+from ai_helpers import generate_math_question, generate_portuguese_question
 
 st.set_page_config(page_title="Modo Livre — ETE Educa", layout="centered")
 st.title("✨ Modo Livre — Prática Infinita (Verificada)")
@@ -51,7 +52,11 @@ if st.button(f"Gerar Pergunta Inédita sobre {topico}"):
     st.session_state.correct_answer_verified = None
     
     with st.spinner(f"A IA está criando uma questão sobre {topico}..."):
-        q_data = generate_new_question(materia, topico)
+        
+        if materia == "Matemática":
+            q_data = generate_math_question(materia, topico)
+        else:
+            q_data = generate_portuguese_question(materia, topico)
         
         if q_data:
             st.session_state.new_question_data = q_data
