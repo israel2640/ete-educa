@@ -156,43 +156,75 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
             st.markdown(f"🧠 {explicacao_divertida}")
 
             # 🔹 Campo para o aluno perguntar sobre a explicação
-            st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")
+st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")
 
-            # Inicializa o campo e flag de limpeza
-            if "pergunta_aluno" not in st.session_state:
-                st.session_state.pergunta_aluno = ""
-            if "limpar_pergunta" not in st.session_state:
-                st.session_state.limpar_pergunta = False
+# 🔹 Inicializa o histórico do chat
+if "chat_duvidas" not in st.session_state:
+    st.session_state.chat_duvidas = []
 
-            # 🔹 Se a flag estiver ativada, limpa o campo antes de renderizar
-            if st.session_state.limpar_pergunta:
-                st.session_state.pergunta_aluno = ""
-                st.session_state.limpar_pergunta = False
+# 🔹 Campo de entrada
+pergunta_aluno = st.text_input("Digite sua pergunta aqui:", key="pergunta_aluno")
 
-            # 🔹 Campo de entrada
-            pergunta_aluno = st.text_input("Digite sua pergunta aqui:", key="pergunta_aluno")
+# 🔹 Quando o aluno envia uma pergunta
+if pergunta_aluno:
+    with st.spinner("A professora está pensando... 🤔"):
+        resposta_duvida = ask_quick_question(
+            f"Matéria: {materia}\n\nExplicação: {explicacao_divertida}\n\nPergunta do aluno: {pergunta_aluno}"
+        )
 
-            if pergunta_aluno:
-                with st.spinner("A professora está pensando... 🤔"):
-                    resposta_duvida = ask_quick_question(
-                        f"Matéria: {materia}\n\nExplicação: {explicacao_divertida}\n\nPergunta do aluno: {pergunta_aluno}"
-                    )
-                    st.markdown(f"🗣️ **Resposta da professora:** {resposta_duvida}")
-                    st.caption("💬 Pode fazer outra pergunta se quiser!")
+    # 🔹 Adiciona pergunta e resposta ao histórico
+    st.session_state.chat_duvidas.append({
+        "pergunta": pergunta_aluno,
+        "resposta": resposta_duvida
+    })
 
-                # 🔹 Marca para limpar o campo depois do reload
-                st.session_state.limpar_pergunta = True
-                st.rerun()
+    # 🔹 Limpa campo e recarrega
+    st.session_state.pergunta_aluno = ""
+    st.rerun()
 
+# 🔹 Exibe histórico de conversa (em formato de chat)
+if st.session_state.chat_duvidas:
+    st.divider()
+    st.markdown("🧠 **Chat com a Professora IA**")
 
+    for i, msg in enumerate(st.session_state.chat_duvidas):
+        st.markdown(f"""
+        <div style='
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1rem;
+        '>
+            <!-- Mensagem do aluno -->
+            <div style='
+                align-self: flex-end;
+                background-color: #DCF8C6;
+                padding: 8px 12px;
+                border-radius: 16px;
+                max-width: 70%;
+                margin-bottom: 4px;
+            '>
+                <b>👦 Você:</b> {msg["pergunta"]}
+            </div>
 
+            <!-- Resposta da professora -->
+            <div style='
+                align-self: flex-start;
+                background-color: #F1F0F0;
+                padding: 8px 12px;
+                border-radius: 16px;
+                max-width: 80%;
+            '>
+                <b>👩‍🏫 Professora:</b> {msg["resposta"]}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
+    # --- 🔹 Botão para limpar o chat ---
+    if st.button("🧹 Limpar conversa"):
+        st.session_state.chat_duvidas = []
+        st.session_state.pergunta_aluno = ""
+        st.rerun()
 
+    st.caption("💬 Pode continuar perguntando! Cada dúvida vira uma nova mensagem no chat.")
 
-            # --- Botão para gerar nova pergunta ---
-            if st.button("Gerar Outra Pergunta"):
-                st.session_state.new_question_data = None
-                st.session_state.reveal_answer = False
-                st.session_state.correct_answer_verified = None
-                st.rerun()
 
