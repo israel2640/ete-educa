@@ -71,8 +71,23 @@ if st.button(f"Gerar Pergunta Inédita sobre {topico}"):
                         st.error(f"Falha na verificação: {status}. A IA pode ter criado opções inválidas. Tente gerar outra.")
                         st.session_state.new_question_data = None
             else:
-                # Para Português, a IA ainda gera a resposta (pois não há cálculo)
-                st.session_state.correct_answer_verified = q_data.get("correta") # A IA ainda vai mandar a chave "correta"
+                # Para Português, a IA deve enviar a alternativa correta dentro do JSON
+                correta_ia = q_data.get("correta")
+
+                # 🔹 Caso o modelo não tenha enviado "correta", tenta identificar pela explicação
+                if not correta_ia:
+                    exp = q_data.get("explicacao", "").lower()
+                    for opcao in q_data.get("opcoes", []):
+                        if re.search(re.escape(opcao.lower().split(")")[1].strip()), exp):
+                            correta_ia = opcao
+                            break
+
+                if correta_ia:
+                    st.session_state.correct_answer_verified = correta_ia
+                else:
+                    st.error("❌ A IA não retornou a alternativa correta. Gere outra questão.")
+                    st.session_state.new_question_data = None
+
         else:
             st.error("Não foi possível gerar a questão. Tente novamente.")
 
