@@ -2,6 +2,7 @@ import streamlit as st
 import unicodedata
 import re
 import sympy as sp
+from ai_helpers import limpar_texto_pergunta
 
 # 🔹 Importações corretas das funções de IA
 from ai_helpers import (
@@ -55,56 +56,66 @@ if materia == "Português":
 else:
     topico = st.selectbox("Escolha um tópico do edital:", topicos_matematica)
 
-# Botão de Gerar
 if st.button(f"Gerar Pergunta Inédita sobre {topico}"):
     st.session_state.new_question_data = None
     st.session_state.reveal_answer = False
     st.session_state.correct_answer_verified = None
-    
+
     with st.spinner(f"A IA está criando uma questão sobre {topico}..."):
-        
+
+        # 1) Gera a questão (IA)
         if materia == "Matemática":
             q_data = generate_math_question(materia, topico)
         else:
             q_data = generate_portuguese_question(materia, topico)
-        
+
+        # 2) Se gerou, LIMPA primeiro (antes de salvar e antes de verificar)
         if q_data:
+            from ai_helpers import limpar_texto_pergunta  # (segurança, caso importe no topo já está ok)
+
+            if "pergunta" in q_data and isinstance(q_data["pergunta"], str):
+                q_data["pergunta"] = limpar_texto_pergunta(q_data["pergunta"])
+            if "texto" in q_data and isinstance(q_data["texto"], str):
+                q_data["texto"] = limpar_texto_pergunta(q_data["texto"])
+            if "explicacao" in q_data and isinstance(q_data["explicacao"], str):
+                q_data["explicacao"] = limpar_texto_pergunta(q_data["explicacao"])
+            if "opcoes" in q_data and isinstance(q_data["opcoes"], list):
+                q_data["opcoes"] = [
+                    limpar_texto_pergunta(op) if isinstance(op, str) else op
+                    for op in q_data["opcoes"]
+                ]
+
+            # 3) Salva a versão limpa
             st.session_state.new_question_data = q_data
-            
-# --- O "PROFESSOR CORRETOR" ENTRA EM AÇÃO ---
+
+            # 4) Verifica a resposta (apenas Matemática)
             if materia == "Matemática":
                 with st.spinner("Python (SymPy) está verificando a matemática da IA..."):
-                    # Nós usamos o SymPy para descobrir a resposta correta
                     correta_verificada, status = get_correct_answer_from_sympy(q_data)
-                    
                     if correta_verificada:
-                        # Nós salvamos a resposta que o *Python* encontrou
                         st.session_state.correct_answer_verified = correta_verificada
-                        # --- CORREÇÃO AQUI ---
-                        
                     else:
                         st.error(f"Falha na verificação: {status}. A IA pode ter criado opções inválidas. Tente gerar outra.")
                         st.session_state.new_question_data = None
             else:
-                # Para Português, a IA deve enviar a alternativa correta dentro do JSON
+                # Português: pega a correta vinda da IA (ou tenta inferir)
                 correta_ia = q_data.get("correta")
-
-                # 🔹 Caso o modelo não tenha enviado "correta", tenta identificar pela explicação
                 if not correta_ia:
                     exp = q_data.get("explicacao", "").lower()
                     for opcao in q_data.get("opcoes", []):
-                        if re.search(re.escape(opcao.lower().split(")")[1].strip()), exp):
-                            correta_ia = opcao
-                            break
-
+                        if isinstance(opcao, str) and ")" in opcao:
+                            corpo = opcao.lower().split(")", 1)[1].strip()
+                            if corpo and corpo in exp:
+                                correta_ia = opcao
+                                break
                 if correta_ia:
                     st.session_state.correct_answer_verified = correta_ia
                 else:
                     st.error("❌ A IA não retornou a alternativa correta. Gere outra questão.")
                     st.session_state.new_question_data = None
-
         else:
             st.error("Não foi possível gerar a questão. Tente novamente.")
+
 
 st.divider()
 
