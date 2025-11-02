@@ -156,75 +156,89 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
             st.markdown(f"🧠 {explicacao_divertida}")
 
             # 🔹 Campo para o aluno perguntar sobre a explicação
-st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")
+            st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")
 
-# 🔹 Inicializa o histórico do chat
-if "chat_duvidas" not in st.session_state:
-    st.session_state.chat_duvidas = []
+            # 🔹 Inicializa o histórico do chat
+            if "chat_duvidas" not in st.session_state:
+                st.session_state.chat_duvidas = []
 
-# 🔹 Campo de entrada
-pergunta_aluno = st.text_input("Digite sua pergunta aqui:", key="pergunta_aluno")
+            # 🔹 Campo de entrada
+            pergunta_aluno = st.text_input("Digite sua pergunta aqui:", key="pergunta_aluno")
 
-# 🔹 Quando o aluno envia uma pergunta
-if pergunta_aluno:
-    with st.spinner("A professora está pensando... 🤔"):
-        resposta_duvida = ask_quick_question(
-            f"Matéria: {materia}\n\nExplicação: {explicacao_divertida}\n\nPergunta do aluno: {pergunta_aluno}"
-        )
+            # 🔹 Quando o aluno envia uma pergunta
+            if pergunta_aluno:
+                with st.spinner("A professora está pensando... 🤔"):
+                    resposta_duvida = ask_quick_question(
+                        f"Matéria: {materia}\n\nExplicação: {explicacao_divertida}\n\nPergunta do aluno: {pergunta_aluno}"
+                    )
 
-    # 🔹 Adiciona pergunta e resposta ao histórico
-    st.session_state.chat_duvidas.append({
-        "pergunta": pergunta_aluno,
-        "resposta": resposta_duvida
-    })
+                # 🔹 Adiciona pergunta e resposta ao histórico
+                st.session_state.chat_duvidas.append({
+                    "pergunta": pergunta_aluno,
+                    "resposta": resposta_duvida
+                })
 
-    # 🔹 Limpa campo e recarrega
-    st.session_state.pergunta_aluno = ""
-    st.rerun()
+                # 🔹 Limpa campo com segurança
+                st.session_state.update({"pergunta_aluno": ""})
+                st.rerun()
 
-# 🔹 Exibe histórico de conversa (em formato de chat)
-if st.session_state.chat_duvidas:
-    st.divider()
-    st.markdown("🧠 **Chat com a Professora IA**")
+            # 🔹 Exibe histórico de conversa com estilo ETE Educa
+            if st.session_state.chat_duvidas:
+                st.divider()
+                st.markdown("🧠 **Chat com a Professora IA**")
 
-    for i, msg in enumerate(st.session_state.chat_duvidas):
-        st.markdown(f"""
-        <div style='
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 1rem;
-        '>
-            <!-- Mensagem do aluno -->
-            <div style='
-                align-self: flex-end;
-                background-color: #DCF8C6;
-                padding: 8px 12px;
-                border-radius: 16px;
-                max-width: 70%;
-                margin-bottom: 4px;
-            '>
-                <b>👦 Você:</b> {msg["pergunta"]}
-            </div>
+                st.markdown("""
+                <style>
+                    .chat-container {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 12px;
+                        margin-top: 10px;
+                    }
+                    .mensagem-aluno {
+                        align-self: flex-end;
+                        background: linear-gradient(135deg, #0078D7, #00B4FF);
+                        color: white;
+                        padding: 10px 14px;
+                        border-radius: 18px 18px 0px 18px;
+                        max-width: 70%;
+                        box-shadow: 0px 2px 5px rgba(0,0,0,0.15);
+                    }
+                    .mensagem-professora {
+                        align-self: flex-start;
+                        background: #FFFBEA;
+                        color: #333;
+                        padding: 10px 14px;
+                        border-radius: 18px 18px 18px 0px;
+                        max-width: 80%;
+                        border: 1px solid #FFE58A;
+                        box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+                    }
+                    .mensagem-professora b {
+                        color: #C07A00;
+                    }
+                    .mensagem-aluno b {
+                        color: #FFD700;
+                    }
+                </style>
+                """, unsafe_allow_html=True)
 
-            <!-- Resposta da professora -->
-            <div style='
-                align-self: flex-start;
-                background-color: #F1F0F0;
-                padding: 8px 12px;
-                border-radius: 16px;
-                max-width: 80%;
-            '>
-                <b>👩‍🏫 Professora:</b> {msg["resposta"]}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+                st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
+                for msg in st.session_state.chat_duvidas:
+                    st.markdown(f"""
+                    <div class='mensagem-aluno'><b>👦 Você:</b> {msg["pergunta"]}</div>
+                    <div class='mensagem-professora'><b>👩‍🏫 Professora:</b> {msg["resposta"]}</div>
+                    """, unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- 🔹 Botão para limpar o chat ---
-    if st.button("🧹 Limpar conversa"):
-        st.session_state.chat_duvidas = []
-        st.session_state.pergunta_aluno = ""
-        st.rerun()
+                # --- Botão para limpar o chat ---
+                st.divider()
+                if st.button("🧹 Limpar conversa"):
+                    st.session_state.chat_duvidas = []
+                    st.session_state.update({"pergunta_aluno": ""})
+                    st.rerun()
 
-    st.caption("💬 Pode continuar perguntando! Cada dúvida vira uma nova mensagem no chat.")
+                st.caption("💬 Continue perguntando! Cada dúvida vira uma nova mensagem com a professora 👩‍🏫")
+
 
 
