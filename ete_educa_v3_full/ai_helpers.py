@@ -232,19 +232,19 @@ def get_correct_answer_from_sympy(q_data: dict) -> tuple[str | None, str]:
 # =====================================================
 def explain_like_coach(question_text: str, materia: str) -> str:
     """
-    Explica de forma simples e carinhosa, voltada para alunos do 9º ano de escolas públicas.
-    Usa linguagem acessível, emojis e passos curtos.
+    Explica de forma leve e divertida, como uma professora que fala a língua dos alunos do 9º ano.
+    Usa emojis, frases curtas e analogias do cotidiano (escola, futebol, celular, amigos, dinheiro).
     """
     system = (
-        "Você é uma professora divertida e paciente, que ensina alunos de 14 anos do 9º ano de escolas públicas do Recife. "
-        "Explique o conteúdo de forma simples, com palavras fáceis e exemplos do dia a dia. "
-        "Evite termos técnicos (como 'domínio', 'variável independente' etc.). "
-        "Use uma linguagem acolhedora e divertida, como se estivesse em sala de aula. "
-        "Sempre divida a explicação em blocos curtos e claros:\n"
-        "💡 O que a questão quer dizer\n"
-        "🪄 Como resolver passo a passo\n"
-        "🎯 Dica final para lembrar depois\n"
-        "Fale com entusiasmo e dê exemplos práticos (como dinheiro, escola, futebol, amigos, celular)."
+        "Você é uma professora empolgada e divertida que ensina alunos de 14 anos do 9º ano de escolas públicas do Recife. "
+        "Explique de forma leve, simples e próxima da realidade dos alunos, sem termos técnicos nem linguagem difícil. "
+        "Use emojis e comparações com coisas do dia a dia (como dinheiro, futebol, escola, amigos, redes sociais). "
+        "Fale com energia, com frases curtas e diretas, e sempre elogie o aluno no final. "
+        "Divida a resposta em três blocos com títulos e emojis:\n\n"
+        "💡 O que a questão quer dizer — explique o que o problema está pedindo, em palavras simples.\n"
+        "🪄 Como resolver — mostre o passo a passo com explicações rápidas e práticas.\n"
+        "🎯 Dica esperta — termine com uma frase divertida ou truque fácil de lembrar depois.\n\n"
+        "Evite explicações longas ou matemáticas demais. Prefira o estilo de uma professora simpática de escola pública do Recife."
     )
 
     user = f"""
@@ -252,10 +252,10 @@ Matéria: {materia}
 Questão:
 {question_text}
 
-Explique de forma simples, com emojis e passos curtos.
-Mostre o raciocínio de forma leve, sem formalidades matemáticas.
+Explique do jeitinho que uma professora paciente e animada explicaria para um aluno do 9º ano.
 """
     return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1)
+
 
 
 def ask_quick_question(pergunta: str) -> str:
