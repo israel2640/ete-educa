@@ -120,18 +120,6 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
         st.markdown(q_data["texto"])
         st.divider()
 
-# --- Exibição da Pergunta ---
-if st.session_state.new_question_data and st.session_state.correct_answer_verified:
-    q_data = st.session_state.new_question_data
-
-    st.subheader("Questão Gerada pela IA:")
-
-    # 🔹 Exibir texto-base se existir
-    if "texto" in q_data and q_data["texto"].strip():
-        st.markdown("📘 **Texto-base:**")
-        st.markdown(q_data["texto"])
-        st.divider()
-
     # 🔹 Exibir a pergunta
     st.markdown(q_data.get("pergunta", "Erro ao carregar pergunta."))
 
@@ -185,3 +173,4 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
                 st.session_state.reveal_answer = False
                 st.session_state.correct_answer_verified = None
                 st.rerun()
+
