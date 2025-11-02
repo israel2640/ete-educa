@@ -4,6 +4,7 @@ import json
 import re
 import sympy as sp
 import math
+import unicodedata
 from dataclasses import dataclass
 from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
@@ -274,48 +275,48 @@ import html
 
 def limpar_texto_pergunta(texto: str) -> str:
     """
-    Corrige erros de codificação e HTML gerados pela IA,
-    como 'Sabendoquecadacal&amp;custaR' ou 'R2eumlanchcustaRx'.
+    Corrige textos gerados pela IA com erros de codificação, HTML e palavras coladas.
+    Exemplo:
+    'R5eeleain...pagouR12' -> 'R$ 5 e ele ainda pagou R$ 12'
     """
+
     if not texto:
         return texto
 
-    # 1️⃣ Decodifica entidades HTML (&euml;, &ccedil;, etc.)
+    # 1️⃣ Decodifica entidades HTML (&eacute;, &ccedil;, etc.)
     texto = html.unescape(texto)
 
-    # 2️⃣ Corrige símbolos monetários e comuns
+    # 2️⃣ Corrige símbolos monetários e valores quebrados
+    texto = re.sub(r"R\s*([0-9])", r"R$ \1", texto)       # R5 → R$ 5
+    texto = re.sub(r"R\$\s*([A-Z])", r"R$ \1", texto)     # R$A → R$ A (corrige colagem)
+    texto = texto.replace("Rx", "R$ x")                   # Rx → R$ x
+    texto = texto.replace("R$", "R$ ")                    # Garante espaço após o símbolo
+
+    # 3️⃣ Corrige caracteres bugados (ex: Ã© → é)
+    texto = texto.encode("latin1", errors="ignore").decode("utf-8", errors="ignore")
+
+    # 4️⃣ Insere espaços entre palavras coladas (ex: 'Masdessetotal' → 'Mas desse total')
+    texto = re.sub(r"(?<=[a-zà-ú])(?=[A-Z])", " ", texto)
+    texto = re.sub(r"([a-zà-ú])([A-ZÀ-Ú])", r"\1 \2", texto)
+    texto = re.sub(r"(\d)([A-Za-z])", r"\1 \2", texto)
+    texto = re.sub(r"([A-Za-z])(\d)", r"\1 \2", texto)
+    texto = re.sub(r"([a-z])([A-Z])", r"\1 \2", texto)
+
+    # 5️⃣ Remove tags estranhas ou sobras HTML
+    texto = re.sub(r"<[^>]+>", "", texto)
+    texto = re.sub(r"\s+", " ", texto).strip()
+
+    # 6️⃣ Corrige padrões conhecidos de erro
     substituicoes = {
-        "R2": "R$ 2",
-        "R3": "R$ 3",
-        "R4": "R$ 4",
-        "R5": "R$ 5",
-        "R6": "R$ 6",
-        "R7": "R$ 7",
-        "R8": "R$ 8",
-        "R9": "R$ 9",
-        "R1": "R$ 1",
-        "Rx": "R$ x",
-        # HTMLs e acentuação comuns
-        "&aacute;": "á", "&eacute;": "é", "&iacute;": "í", "&oacute;": "ó", "&uacute;": "ú",
-        "&atilde;": "ã", "&otilde;": "õ", "&acirc;": "â", "&ecirc;": "ê", "&ocirc;": "ô",
-        "&ccedil;": "ç", "&nbsp;": " ",
-        "euml": "e", "auml": "a", "ouml": "o",
-        "amp;": "",
+        "R2": "R$ 2", "R3": "R$ 3", "R4": "R$ 4", "R5": "R$ 5", "R6": "R$ 6",
+        "R7": "R$ 7", "R8": "R$ 8", "R9": "R$ 9", "R1": "R$ 1",
+        "Reele": "R$ e ele",  # caso clássico: 'R5eele'
     }
+    for erro, certo in substituicoes.items():
+        texto = texto.replace(erro, certo)
 
-    for erro, correto in substituicoes.items():
-        texto = texto.replace(erro, correto)
-
-    # 3️⃣ Adiciona espaços entre palavras coladas (ex: “Sabendoquecada” → “Sabendo que cada”)
-    texto = re.sub(r"([a-zá-ú])([A-ZÁ-Ú])", r"\1 \2", texto)
-    texto = re.sub(r"([a-zá-ú])([A-ZÁ-Ú])", r"\1 \2", texto)
-    texto = re.sub(r"([a-zá-ú])([A-ZÁ-Ú])", r"\1 \2", texto)
-
-    # 4️⃣ Substitui casos de letras coladas sem espaço (entre palavras)
-    texto = re.sub(r"([a-z])([A-Z])", r"\1 \2", texto)
-    texto = re.sub(r"([a-z])([A-Z])", r"\1 \2", texto)
-
-    # 5️⃣ Remove múltiplos espaços e pontuação redundante
+    # 7️⃣ Normaliza espaços e pontuação
+    texto = re.sub(r"\s+([.,!?])", r"\1", texto)
     texto = re.sub(r"\s+", " ", texto).strip()
 
     return texto
