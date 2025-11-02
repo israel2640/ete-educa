@@ -122,8 +122,13 @@ Responda apenas com JSON no formato:
 def generate_portuguese_question(materia: str, topico: str) -> dict | None:
     system = (
         "Você é um criador de questões de português para o vestibular da ETE. "
-        "Crie uma pergunta de múltipla escolha com 4 alternativas (a, b, c, d), "
-        "uma explicação textual e indique a alternativa correta no campo 'correta'."
+        "Crie uma questão completa com:\n"
+        "1️⃣ Um pequeno texto-base (3 a 5 linhas) coerente e claro.\n"
+        "2️⃣ Uma pergunta de interpretação sobre esse texto.\n"
+        "3️⃣ Quatro alternativas (a, b, c, d).\n"
+        "4️⃣ O campo 'correta' com a alternativa certa.\n"
+        "5️⃣ Uma explicação textual mostrando por que essa é a correta.\n"
+        "⚠️ Formate tudo como JSON bem estruturado."
     )
     user = f"""
 Matéria: {materia}
