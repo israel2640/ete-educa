@@ -125,46 +125,110 @@ Responda apenas com JSON no formato:
 # 🔹 FUNÇÃO DO "PROFESSOR CORRETOR" (PYTHON RESOLVE)
 # =====================================================
 def get_correct_answer_from_sympy(q_data: dict) -> tuple[str | None, str]:
-    """Resolve a matemática usando SymPy para ENCONTRAR a resposta correta."""
+    """
+    Resolve a matemática usando SymPy para ENCONTRAR a resposta correta.
+    Faz matching robusto: decimal com ponto/vírgula, fração (a/b), número misto (a b/c) e aproximação.
+    """
+    import math
     try:
         equacao_str = q_data.get("equacao_para_sympy")
         variavel_str = q_data.get("variavel_solucao")
         opcoes = q_data.get("opcoes", [])
-        
+
         if not equacao_str:
             return None, "Erro: A IA não forneceu uma equação para verificar."
-            
+
         expr = sp.sympify(equacao_str)
         solucao_final = None
-        
+
+        # Equação com variável (Eq(...))
         if isinstance(expr, sp.Equality) and variavel_str:
             variavel = sp.symbols(variavel_str)
             solucoes = sp.solve(expr, variavel)
             if solucoes:
                 solucao_final = float(solucoes[0])
+
+        # Expressão direta (ex: 3**4 * 3**(-2))
         elif not variavel_str:
             solucao_final = float(expr.evalf())
 
         if solucao_final is None:
             return None, f"Erro: SymPy não conseguiu resolver '{equacao_str}'."
 
-        solucao_str_ponto = str(round(solucao_final, 2))
-        solucao_str_virgula = solucao_str_ponto.replace('.', ',')
-        solucao_str_int = str(int(solucao_final))
-        
+        # Também guardamos a forma fracionária exata, quando possível (ex: 16/3)
+        try:
+            racional = sp.nsimplify(solucao_final)
+        except Exception:
+            racional = None
+
+        # --- Funções auxiliares de parsing ---
+        def extrair_valor(op_text: str) -> float | None:
+            """
+            Extrai um valor numérico da alternativa:
+            - '16/3' -> 5.3333...
+            - '5 1/3' (misto) -> 5.3333...
+            - '5,33' ou '5.333' -> float
+            Retorna None se não conseguir.
+            """
+            txt = op_text.strip().lower()
+
+            # remove rótulo 'a) ', 'b) ' etc.
+            txt = re.sub(r"^[a-d]\)\s*", "", txt)
+
+            # número misto: "a b/c"
+            m_misto = re.match(r"^\s*(\d+)\s+(\d+)\s*/\s*(\d+)\s*$", txt)
+            if m_misto:
+                a, b, c = map(int, m_misto.groups())
+                if c != 0:
+                    return a + (b / c)
+
+            # fração simples: "a/b"
+            m_frac = re.match(r"^\s*(-?\d+)\s*/\s*(\d+)\s*$", txt)
+            if m_frac:
+                a, b = map(int, m_frac.groups())
+                if b != 0:
+                    return a / b
+
+            # pega primeiro número decimal na string (aceita vírgula)
+            m_dec = re.search(r"-?\d+(?:[.,]\d+)?", txt)
+            if m_dec:
+                num = m_dec.group(0).replace(",", ".")
+                try:
+                    return float(num)
+                except ValueError:
+                    pass
+
+            return None
+
+        # --- Matching robusto ---
         for opcao in opcoes:
-            opcao_limpa = re.sub(r"^[a-d]\)\s*", "", opcao.strip())
-            if (
-                opcao_limpa == solucao_str_ponto or
-                opcao_limpa == solucao_str_virgula or
-                (solucao_final == int(solucao_final) and opcao_limpa == solucao_str_int)
-            ):
-                return opcao, "Cálculo verificado pelo Python."
-        
-        return None, f"Erro: Nenhuma opção corresponde à resposta correta ({solucao_final})."
+            # 1) comparação por valor numérico com tolerância (±0,01)
+            val = extrair_valor(opcao)
+            if val is not None:
+                if math.isclose(val, solucao_final, rel_tol=0.0, abs_tol=0.01):
+                    return opcao, "Cálculo verificado pelo Python (aproximação numérica)."
+                # também aceita igualdade pelas duas casas
+                if round(val, 2) == round(solucao_final, 2):
+                    return opcao, "Cálculo verificado pelo Python (duas casas decimais)."
+
+            # 2) comparação por fração textual exata (ex: '16/3')
+            if racional and isinstance(racional, sp.Rational):
+                num = racional.p / racional.q
+                frac_text = f"{int(racional.p)}/{int(racional.q)}"
+                # remove rótulo e espaços
+                opcao_limpa = re.sub(r"^[a-d]\)\s*", "", opcao.strip()).replace(" ", "")
+                if opcao_limpa == frac_text:
+                    return opcao, "Cálculo verificado pelo Python (fração exata)."
+
+        # Se chegou aqui, não bateu nenhuma forma
+        return None, (
+            f"Erro: Nenhuma opção corresponde à resposta correta ({solucao_final}). "
+            "A IA pode ter criado opções inválidas. Tente gerar outra."
+        )
 
     except Exception as e:
         return None, f"Erro fatal no SymPy: {e}"
+
 
 # =====================================================
 # 🔹 Funções de texto (usam modelo mais barato)
