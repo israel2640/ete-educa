@@ -157,15 +157,18 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
 
             # 🔹 Campo para o aluno perguntar sobre a explicação
             st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")
-            pergunta_aluno = st.text_input("Digite sua pergunta aqui:")
+            pergunta_aluno = st.text_input("Digite sua pergunta aqui:", key="pergunta_aluno")
 
             if pergunta_aluno:
                 with st.spinner("A professora está pensando... 🤔"):
-                    # A IA responde considerando o contexto da explicação
                     resposta_duvida = ask_quick_question(
-                        f"Explicação: {explicacao_divertida}\n\nPergunta do aluno: {pergunta_aluno}"
+                        f"Matéria: {materia}\n\nExplicação: {explicacao_divertida}\n\nPergunta do aluno: {pergunta_aluno}"
                     )
                     st.markdown(f"🗣️ **Resposta da professora:** {resposta_duvida}")
+
+                # 🔹 Limpa o campo depois da resposta
+                st.session_state["pergunta_aluno"] = ""
+
 
             # --- Botão para gerar nova pergunta ---
             if st.button("Gerar Outra Pergunta"):
