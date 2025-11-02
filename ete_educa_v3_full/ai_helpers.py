@@ -8,6 +8,7 @@ import unicodedata
 from dataclasses import dataclass
 from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
+from youtubesearchpython import VideosSearch
 from typing import Dict, Any
 
 # =====================================================
@@ -309,3 +310,18 @@ def limpar_texto_pergunta(texto: str) -> str:
 
     return texto
 
+def buscar_videos_youtube(topico, materia):
+    """
+    Busca vídeos educativos no YouTube sobre o tópico e a matéria do aluno.
+    Retorna uma lista de até 3 vídeos relevantes.
+    """
+    pesquisa = f"Aula {materia} {topico} explicação 9º ano"
+    videos = VideosSearch(pesquisa, limit=3).result()
+
+    recomendacoes = []
+    for v in videos['result']:
+        recomendacoes.append({
+            "titulo": v['title'],
+            "link": v['link']
+        })
+    return recomendacoes

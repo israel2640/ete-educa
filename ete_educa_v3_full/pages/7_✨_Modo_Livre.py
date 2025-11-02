@@ -159,6 +159,17 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
 
             # Exibe a explicação com um emoji
             st.markdown(f"🧠 {explicacao_divertida}")
+            # 🔹 Recomendar vídeos do YouTube com base no tópico e matéria
+            from ai_helpers import buscar_videos_youtube
+
+            with st.spinner("Buscando vídeos explicativos no YouTube... 🎥"):
+                recomendacoes = buscar_videos_youtube(topico, materia)
+
+            if recomendacoes:
+                st.markdown("🎬 **Quer reforçar o conteúdo? Assista também:**")
+                for v in recomendacoes:
+                    st.markdown(f"- [{v['titulo']}]({v['link']})")
+
 
             # 🔹 Campo para o aluno perguntar sobre a explicação
     st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")
