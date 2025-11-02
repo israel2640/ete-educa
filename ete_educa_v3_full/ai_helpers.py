@@ -208,7 +208,8 @@ def explain_like_coach(question_text: str, materia: str) -> str:
         "Finalize com uma dica divertida de memorização."
     )
     user = f"Matéria: {materia}\n\Questão:\n{question_text}\n\nExplique seguindo os 3 blocos e finalize com 1 dica curta de memorização."
-    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1.0)
+    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini")
+
 
 def ask_quick_question(pergunta: str) -> str:
     """Responde perguntas curtas de forma didática."""
@@ -218,4 +219,4 @@ def ask_quick_question(pergunta: str) -> str:
         "Se for um conceito, dê uma frase explicando e um exemplo."
     )
     user = f"Dúvida da aluna: {pergunta}"
-    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1.0)
+    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini")
