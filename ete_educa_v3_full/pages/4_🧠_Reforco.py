@@ -5,7 +5,7 @@ from ai_helpers import explain_like_coach
 # ==========================
 # 🔹 Configuração da página
 # ==========================
-st.set_page_config(page_title="🧠 Reforço — ETE Educa", page_icon="🧠", layout="centered")
+st.set_page_config(page_title="Reforço — ETE Educa", layout="centered")
 st.header("🧠 Reforço — Revise o que errou e domine o conteúdo!")
 
 # ====== Função auxiliar padronizada ======

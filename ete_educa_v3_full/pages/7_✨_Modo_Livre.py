@@ -5,7 +5,7 @@ import sympy as sp
 # AQUI ESTÁ A MUDANÇA: importamos a nova função de verificação
 from ai_helpers import generate_new_question, get_correct_answer_from_sympy
 
-st.set_page_config(page_title="✨ Modo Livre — ETE Educa", page_icon="✨", layout="centered")
+st.set_page_config(page_title="Modo Livre — ETE Educa", layout="centered")
 st.title("✨ Modo Livre — Prática Infinita (Verificada)")
 st.caption("A IA gera perguntas inéditas e o Python verifica a resposta para garantir 100% de precisão!")
 

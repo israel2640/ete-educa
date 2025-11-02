@@ -4,7 +4,7 @@ from ai_helpers import explain_like_coach, ask_quick_question
 # ==========================
 # 🔹 Configuração da página
 # ==========================
-st.set_page_config(page_title="🤖 Revisão com IA — ETE Educa", page_icon="🤖", layout="centered")
+st.set_page_config(page_title="Revisão com IA — ETE Educa", layout="centered")
 st.title("🤖 Revisão com IA")
 st.caption("Use a IA para explicar questões difíceis ou tirar dúvidas rápidas!")
 

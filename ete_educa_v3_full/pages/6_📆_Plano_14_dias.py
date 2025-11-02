@@ -5,7 +5,7 @@ from engine import load_progress, save_progress, ensure_user
 # ================================
 # 🔹 Configuração da página
 # ================================
-st.set_page_config(page_title="📆 Plano de 14 Dias", page_icon="📆", layout="centered")
+st.set_page_config(page_title="Plano de 14 Dias", layout="centered")
 st.title("📆 Plano de 14 Dias — Reta Final para a ETE")
 st.caption("Seu guia de metas diárias. Siga o plano e marque as tarefas ao completar.")
 

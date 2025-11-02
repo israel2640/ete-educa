@@ -5,7 +5,7 @@ from data.simulado_loader import gerar_prova
 from engine import load_progress, save_progress, ensure_user, add_reforco
 
 # ====== Configuração ======
-st.set_page_config(page_title="⏱️ Desafiar — ETE Educa", page_icon="⏱️", layout="centered")
+st.set_page_config(page_title="Desafiar — ETE Educa", layout="centered")
 st.title("⏱️ Desafiar — Simulado Inteligente")
 st.write("Responda ao simulado completo com base nas provas oficiais da ETE (2022–2024) e veja seu desempenho!")
 

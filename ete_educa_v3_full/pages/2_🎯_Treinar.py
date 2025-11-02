@@ -6,7 +6,7 @@ from engine import (
 )
 
 # ====== Configuração ======
-st.set_page_config(page_title="🎯 Treinar — ETE Educa", page_icon="🎯", layout="centered")
+st.set_page_config(page_title="Treinar — ETE Educa", layout="centered")
 st.header("🎯 Treinar — Uma pergunta de cada vez")
 
 # ====== Função auxiliar padronizada ======
