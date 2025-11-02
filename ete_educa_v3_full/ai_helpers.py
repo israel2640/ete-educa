@@ -36,7 +36,7 @@ def _client() -> OpenAI:
         raise RuntimeError(f"Erro ao inicializar o cliente OpenAI: {e}")
 
 # =====================================================
-# 🔹 Função central de chamada à API
+# 🔹 Função central de chamada à API (DEFINIDA AQUI)
 # =====================================================
 def _make_api_call(system_prompt: str, user_prompt: str, model: str, temperature: float,
                    response_format: Dict[str, str] | None = None) -> str:
@@ -72,17 +72,21 @@ def generate_new_question(materia: str, topico: str) -> dict | None:
     A IA gera a pergunta, as opções e a string da equação.
     O Python (SymPy) será o único responsável por resolvê-la.
     """
+    
+    # --- PROMPT DE SISTEMA MELHORADO ---
     system = (
         "Você é um assistente de IA especialista em criar questões para o vestibular da ETE. "
         "Seu trabalho é criar uma pergunta de múltipla escolha (4 alternativas: a, b, c, d) sobre um tópico. "
         "Você DEVE fornecer a equação matemática pura, em formato SymPy, em um campo separado para que um "
-        "computador possa resolvê-la e encontrar a resposta correta."
+        "computador possa resolvê-la e verificar."
         "\n\nREGRAS CRÍTICAS:\n"
-        "1. NÃO inclua a chave 'correta' no JSON. O computador irá calcular.\n"
-        "2. A 'equacao_para_sympy' DEVE ser uma string que o SymPy possa resolver.\n"
-        "3. A 'explicacao' deve ser um guia passo a passo genérico de como resolver."
+        "1. PRECISÃO MATEMÁTICA É PRIORIDADE MÁXIMA.\n"
+        "2. NÃO inclua a chave 'correta' no JSON. O computador irá calcular.\n"
+        "3. A 'equacao_para_sympy' DEVE ser uma string que o SymPy possa resolver.\n"
+        "4. A 'explicacao' deve ser um guia passo a passo, em tom AMIGÁVEL e ENCANTADOR, como se estivesse falando com um aluno de 14 anos. Use emojis (💡, 🤓, ✅) para guiar."
     )
-
+    
+    # --- EXEMPLOS DO USUÁRIO MELHORADOS (COM O NOVO TOM) ---
     user = f"""
 Gere uma (1) nova questão de múltipla escolha sobre o tópico abaixo.
 
@@ -91,11 +95,11 @@ Tópico: {topico}
 
 Responda apenas com JSON no formato:
 {{
-  "pergunta": "Seja x um número real tal que 2^(2x + 1) = 64. Qual é o valor de x?",
-  "opcoes": ["a) 2", "b) 2.5", "c) 3", "d) 3.5"],
-  "equacao_para_sympy": "Eq(2**(2*x + 1), 64)",
-  "variavel_solucao": "x",
-  "explicacao": "Para resolver esta equação, primeiro reescrevemos 64 como 2^6. Isso nos dá 2^(2x+1) = 2^6. Como as bases são iguais, igualamos os expoentes: 2x + 1 = 6. Resolvendo para x, temos 2x = 5, e portanto x = 2.5."
+  "pergunta": "Seja y um número real tal que 5^(y - 2) = 1/25. Qual é o valor de y?",
+  "opcoes": ["a) 0", "b) 1", "c) 2", "d) 3"],
+  "equacao_para_sympy": "Eq(5**(y - 2), 1/25)",
+  "variavel_solucao": "y",
+  "explicacao": "🤓 Ei, vamos lá! O truque aqui é 'igualar as bases'.\n1. 💡 O lado esquerdo tem base 5. Precisamos reescrever o 1/25 como base 5.\n2. Lembre-se que 25 = 5^2. E quando o número está 'embaixo' (no denominador), o expoente fica negativo!\n3. Então, 1/25 = 5^(-2).\n4. Agora a equação fica: 5^(y - 2) = 5^(-2).\n5. ✅ Como as bases (o 5) são iguais, os expoentes têm que ser iguais! Então: y - 2 = -2.\n6. Resolvendo: y = -2 + 2, o que dá y = 0."
 }}
 
 ---
@@ -109,10 +113,11 @@ Tópico: Potenciação
   "opcoes": ["a) 9", "b) 27", "c) 1", "d) 3"],
   "equacao_para_sympy": "3**4 * 3**(-2)",
   "variavel_solucao": null,
-  "explicacao": "Para resolver, usamos a propriedade da potência de mesma base: somamos os expoentes. Temos 3^(4 + (-2)), que é 3^2. O resultado é 9."
+  "explicacao": "💡 Esse é mais fácil do que parece! A regra de potência diz que quando multiplicamos números com a mesma base (a base aqui é 3), nós só precisamos SOMAR os expoentes.\n1. Os expoentes são 4 e -2.\n2. A conta é: 4 + (-2) = 2.\n3. Então, o resultado é 3^2 (três ao quadrado).\n4. ✅ 3^2 = 3 * 3 = 9."
 }}
 """
     
+    # AGORA A CHAMADA FUNCIONA
     json_string = _make_api_call(
         system_prompt=system,
         user_prompt=user,
@@ -183,7 +188,7 @@ def get_correct_answer_from_sympy(q_data: dict) -> tuple[str | None, str]:
             ):
                 return opcao, "Cálculo verificado pelo Python." # Achamos a resposta correta!
         
-        return None, f"Erro: Nenhuma opção corresponde à resposta correta ({solucao_final}). A IA criou opções erradas."
+        return None, f"Erro: Nenhuma opção ({[op for op in opcoes]}) corresponde à resposta correta ({solucao_final}). A IA criou opções inválidas."
 
     except Exception as e:
         return None, f"Erro fatal no SymPy: {e}"
@@ -202,7 +207,7 @@ def explain_like_coach(question_text: str, materia: str) -> str:
         "1️⃣ O Pulo do Gato\n2️⃣ Passo a Passo\n3️⃣ Por que as outras estão erradas\n"
         "Finalize com uma dica divertida de memorização."
     )
-    user = f"Matéria: {materia}\n\nQuestão:\n{question_text}\n\nExplique seguindo os 3 blocos e finalize com 1 dica curta de memorização."
+    user = f"Matéria: {materia}\n\Questão:\n{question_text}\n\nExplique seguindo os 3 blocos e finalize com 1 dica curta de memorização."
     return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=0.5)
 
 def ask_quick_question(pergunta: str) -> str:
