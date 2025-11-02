@@ -166,8 +166,10 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
                     )
                     st.markdown(f"🗣️ **Resposta da professora:** {resposta_duvida}")
 
-                # 🔹 Limpa o campo depois da resposta
-                st.rerun()
+            # 🔹 Limpa o campo antes do rerun para evitar loop
+            st.session_state.pergunta_aluno = ""
+            st.rerun()
+
 
 
 
