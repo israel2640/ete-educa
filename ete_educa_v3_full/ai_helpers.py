@@ -218,4 +218,4 @@ def ask_quick_question(pergunta: str) -> str:
         "Se for um conceito, dê uma frase explicando e um exemplo."
     )
     user = f"Dúvida da aluna: {pergunta}"
-    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=0.3)
+    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1.0)
