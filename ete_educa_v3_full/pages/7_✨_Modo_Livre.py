@@ -66,7 +66,7 @@ if st.button(f"Gerar Pergunta Inédita sobre {topico}"):
                         # Nós salvamos a resposta que o *Python* encontrou
                         st.session_state.correct_answer_verified = correta_verificada
                         # --- CORREÇÃO AQUI ---
-                        st.success(f"Questão gerada e verificada pelo Python! Resposta correta: {correta_verificada}")
+                        
                     else:
                         st.error(f"Falha na verificação: {status}. A IA pode ter criado opções inválidas. Tente gerar outra.")
                         st.session_state.new_question_data = None
