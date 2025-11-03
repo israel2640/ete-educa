@@ -174,17 +174,24 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
                     titulo = v.get("titulo", "Vídeo educativo")
                     link = v.get("link", "")
 
-                    if link:
+                    if link and "watch?v=" in link:
+                        video_id = link.split("watch?v=")[-1]
+                        thumbnail = f"https://img.youtube.com/vi/{video_id}/0.jpg"
+
                         video_html += f"""
-                        <div style='margin-bottom:10px;'>
-                            <a href='{link}' target='_blank' style='color:#00B4FF;text-decoration:none;font-size:16px;'>
-                                ▶️ {titulo}
-                            </a>
+                        <div style='display:flex;align-items:center;gap:12px;margin-bottom:12px;background:rgba(255,255,255,0.05);
+                                    padding:8px 12px;border-radius:10px;backdrop-filter:blur(4px);'>
+                            <img src='{thumbnail}' width='120' style='border-radius:8px;'>
+                            <div>
+                                <a href='{link}' target='_blank' style='font-size:16px;color:#00B4FF;text-decoration:none;'>
+                                    ▶️ {titulo}
+                                </a>
+                            </div>
                         </div>
                         """
 
-                # 🔹 Exibe todos os links de uma vez (fora da reatividade interna)
                 st.markdown(video_html, unsafe_allow_html=True)
+
 
 
             # 🔹 Campo para o aluno perguntar sobre a explicação
