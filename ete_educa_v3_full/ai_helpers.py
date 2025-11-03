@@ -4,11 +4,11 @@ import json
 import re
 import sympy as sp
 import math
+import requests
 import unicodedata
 from dataclasses import dataclass
 from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
-from youtubesearchpython import VideosSearch
 from typing import Dict, Any
 
 # =====================================================
@@ -312,126 +312,44 @@ def limpar_texto_pergunta(texto: str) -> str:
 
 def buscar_videos_youtube(topico, materia):
     """
-    Busca vídeos educativos no YouTube sobre o tópico e a matéria.
-    Se a busca falhar, recomenda vídeos fixos e relevantes conforme o tema.
+    Busca vídeos educativos no YouTube via SerpAPI (Google Search).
+    Retorna os 3 primeiros resultados com título e link.
     """
+    api_key = os.getenv("SERP_API_KEY")
+    if not api_key:
+        print("⚠️ SERP_API_KEY não configurada no .env")
+        return []
 
-    pesquisa = f"Aula {materia} {topico} explicação 9º ano"
-    recomendacoes = []
+    pesquisa = f"aula {materia} {topico} explicação 9º ano site:youtube.com"
+    url = "https://serpapi.com/search"
 
-    # ==========================================================
-    # 1️⃣ Tentativa de busca dinâmica no YouTube
-    # ==========================================================
-    try:
-        videos = VideosSearch(pesquisa, limit=3).result()
-        for v in videos.get('result', []):
-            recomendacoes.append({
-                "titulo": v.get('title', 'Vídeo educativo'),
-                "link": v.get('link', '')
-            })
-        if recomendacoes:
-            return recomendacoes
-
-    except Exception as e:
-        print(f"[Aviso] Falha na busca dinâmica: {e}")
-
-    # ==========================================================
-    # 2️⃣ Fallback com vídeos fixos por tema e matéria
-    # ==========================================================
-
-    VIDEOS_FIXOS = {
-        "portugues": {
-            "compreensão": [
-                ("Compreensão de texto — Descomplica", "https://www.youtube.com/watch?v=nsSlN_oan7E"),
-                ("Como interpretar textos — Professor Noslen", "https://www.youtube.com/watch?v=Gx1fGj5a8Tw")
-            ],
-            "coesão": [
-                ("Coesão e Coerência — Aula dinâmica", "https://www.youtube.com/watch?v=58iYVwq8pO4"),
-                ("Entendendo Coesão Textual", "https://www.youtube.com/watch?v=mvKBTbCCgY8")
-            ],
-            "crase": [
-                ("Crase sem medo — Português na Prática", "https://www.youtube.com/watch?v=t1qLknh2_JI"),
-                ("Uso da Crase — Descomplica", "https://www.youtube.com/watch?v=kx1CGkbV5Yk")
-            ],
-            "pontuação": [
-                ("Pontuação — Português Fácil", "https://www.youtube.com/watch?v=F3KxYr6yMU0"),
-                ("Uso da vírgula — Aula rápida", "https://www.youtube.com/watch?v=c5Q_fqWbM00")
-            ],
-            "classes gramaticais": [
-                ("Classes de palavras — Aula completa", "https://www.youtube.com/watch?v=9YWApVqvVdU")
-            ],
-            "semântica": [
-                ("Semântica — Sentido das palavras", "https://www.youtube.com/watch?v=_MZUBHoP5fs")
-            ],
-            "figuras": [
-                ("Figuras de Linguagem — Aula divertida", "https://www.youtube.com/watch?v=W-RFLYtI1nE")
-            ],
-            "concordância": [
-                ("Concordância verbal e nominal — Português com Letícia", "https://www.youtube.com/watch?v=V0l2mA9eLkA")
-            ],
-            "regência": [
-                ("Regência verbal e nominal — Aula prática", "https://www.youtube.com/watch?v=AKXHTNHdGRk")
-            ],
-        },
-        "matematica": {
-            "frações": [
-                ("Frações — Professor Ferretto", "https://www.youtube.com/watch?v=Yv5H8P6KGlw"),
-                ("Operações com Frações — Aula Completa", "https://www.youtube.com/watch?v=3JZyM1HwSgI")
-            ],
-            "porcentagem": [
-                ("Porcentagem — Aula simples e prática", "https://www.youtube.com/watch?v=Ku7o2fS3MCg"),
-                ("Porcentagem no dia a dia — Ferretto", "https://www.youtube.com/watch?v=Yy4if8KhvBI")
-            ],
-            "regra de três": [
-                ("Regra de Três Simples — Matemática Rio", "https://www.youtube.com/watch?v=Z8A-9i7F_kk")
-            ],
-            "potenciação": [
-                ("Potenciação — Aula passo a passo", "https://www.youtube.com/watch?v=5nXfX_A1lP4")
-            ],
-            "radiciação": [
-                ("Radiciação — Aula completa", "https://www.youtube.com/watch?v=3CIMT5W3H2Q")
-            ],
-            "proporção": [
-                ("Razão e Proporção — Matemática do Zero", "https://www.youtube.com/watch?v=6F_EhJhEVTI")
-            ],
-            "polígonos": [
-                ("Polígonos — Geometria para o 9º ano", "https://www.youtube.com/watch?v=QmHujbsF4K0")
-            ],
-            "ângulos": [
-                ("Ângulos — Tipos e medidas", "https://www.youtube.com/watch?v=qH3Jbtsr2hA")
-            ],
-            "triângulos": [
-                ("Triângulos — Aula completa", "https://www.youtube.com/watch?v=fH0xGOSspvo")
-            ],
-            "equações": [
-                ("Equações do 1º Grau — Aula prática", "https://www.youtube.com/watch?v=duNBfJbqH1w")
-            ],
-            "sistemas": [
-                ("Sistemas Lineares — Matemática Simplificada", "https://www.youtube.com/watch?v=QOtD6FokH0Q")
-            ]
-        }
+    params = {
+        "engine": "google",
+        "q": pesquisa,
+        "num": 3,
+        "api_key": api_key
     }
 
-    materia_key = "portugues" if "port" in materia.lower() else "matematica"
-    topico_lower = topico.lower()
+    try:
+        r = requests.get(url, params=params)
+        data = r.json()
 
-    # Busca vídeos que contenham o nome do tópico
-    for chave, videos in VIDEOS_FIXOS[materia_key].items():
-        if chave in topico_lower:
-            recomendacoes = [{"titulo": t, "link": l} for t, l in videos]
-            break
+        recomendacoes = []
+        for item in data.get("video_results", []):
+            recomendacoes.append({
+                "titulo": item.get("title", "Vídeo educativo"),
+                "link": item.get("link", "")
+            })
 
-    # Se nada for encontrado, usa fallback genérico da matéria
-    if not recomendacoes:
-        if materia_key == "portugues":
+        if not recomendacoes:
+            # Fallback caso a API não retorne vídeos
             recomendacoes = [
-                {"titulo": "Interpretação de texto — Descomplica", "link": "https://www.youtube.com/watch?v=nsSlN_oan7E"},
-                {"titulo": "Gramática prática — Aula para o 9º ano", "link": "https://www.youtube.com/watch?v=Rr9tz2NxoWc"}
-            ]
-        else:
-            recomendacoes = [
-                {"titulo": "Operações Fundamentais — Matemática do Zero (Professor Ferretto)", "link": "https://www.youtube.com/watch?v=l7YXcP7z6Wg"},
-                {"titulo": "Resolvendo Problemas Matemáticos — Canal Matemática em Exercícios", "link": "https://www.youtube.com/watch?v=3fdmKtx2bqE"}
+                {"titulo": "Matemática Básica — Rafael", "link": "https://www.youtube.com/watch?v=25MKvVixayM&list=PL83s8LGM84J4L7CJoReZdEP7j_gemg94d"},
+                {"titulo": "Interpretação de Texto — Noslen", "link": "https://www.youtube.com/watch?v=XsN0e_xPyNI"}
             ]
 
-    return recomendacoes
+        return recomendacoes
+
+    except Exception as e:
+        print(f"Erro ao buscar vídeos: {e}")
+        return []
