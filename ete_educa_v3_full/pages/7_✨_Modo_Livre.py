@@ -169,16 +169,22 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
             if recomendacoes:
                 st.markdown("🎬 **Quer reforçar o conteúdo? Assista também:**")
 
+                video_html = ""
                 for v in recomendacoes:
                     titulo = v.get("titulo", "Vídeo educativo")
                     link = v.get("link", "")
 
                     if link:
-                        st.markdown(
-                            f"<a href='{link}' target='_blank' style='text-decoration:none; color:#00B4FF;'>▶️ {titulo}</a>",
-                            unsafe_allow_html=True
-                        )
+                        video_html += f"""
+                        <div style='margin-bottom:10px;'>
+                            <a href='{link}' target='_blank' style='color:#00B4FF;text-decoration:none;font-size:16px;'>
+                                ▶️ {titulo}
+                            </a>
+                        </div>
+                        """
 
+                # 🔹 Exibe todos os links de uma vez (fora da reatividade interna)
+                st.markdown(video_html, unsafe_allow_html=True)
 
 
             # 🔹 Campo para o aluno perguntar sobre a explicação
