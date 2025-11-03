@@ -313,39 +313,44 @@ def limpar_texto_pergunta(texto: str) -> str:
 def buscar_videos_youtube(topico, materia):
     """
     Busca vídeos educativos no YouTube via SerpAPI (Google Search).
-    Retorna os 3 primeiros resultados com título e link.
+    Retorna até 3 resultados relevantes e seguros.
     """
     api_key = os.getenv("SERP_API_KEY")
     if not api_key:
         print("⚠️ SERP_API_KEY não configurada no .env")
         return []
 
-    pesquisa = f"aula {materia} {topico} explicação 9º ano site:youtube.com"
     url = "https://serpapi.com/search"
+    pesquisas = [
+        f"aula {materia} {topico} explicação 9º ano site:youtube.com",
+        f"aula {topico} {materia} site:youtube.com"
+    ]
 
-    params = {
-        "engine": "google",
-        "q": pesquisa,
-        "num": 3,
-        "api_key": api_key
-    }
+    recomendacoes = []
 
     try:
-        r = requests.get(url, params=params)
-        data = r.json()
+        for termo in pesquisas:
+            params = {"engine": "google", "q": termo, "num": 5, "api_key": api_key}
+            r = requests.get(url, params=params)
+            data = r.json()
 
-        recomendacoes = []
-        for item in data.get("video_results", []):
-            recomendacoes.append({
-                "titulo": item.get("title", "Vídeo educativo"),
-                "link": item.get("link", "")
-            })
+            for item in data.get("organic_results", []):
+                link = item.get("link", "")
+                if "youtube.com/watch" in link:
+                    recomendacoes.append({
+                        "titulo": item.get("title", "Vídeo educativo"),
+                        "link": link
+                    })
+            if recomendacoes:
+                break
+
+        # 🔹 Garante máximo de 3 vídeos únicos
+        recomendacoes = recomendacoes[:3]
 
         if not recomendacoes:
-            # Fallback caso a API não retorne vídeos
             recomendacoes = [
-                {"titulo": "Matemática Básica — Rafael", "link": "https://www.youtube.com/watch?v=25MKvVixayM&list=PL83s8LGM84J4L7CJoReZdEP7j_gemg94d"},
-                {"titulo": "Interpretação de Texto — Noslen", "link": "https://www.youtube.com/watch?v=XsN0e_xPyNI"}
+                {"titulo": "Matemática Básica — Professor Ferretto", "link": "https://www.youtube.com/watch?v=dz_1kzq0I3Y"},
+                {"titulo": "Interpretação de Texto — Professor Noslen", "link": "https://www.youtube.com/watch?v=XsN0e_xPyNI"}
             ]
 
         return recomendacoes
