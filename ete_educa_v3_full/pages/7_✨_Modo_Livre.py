@@ -10,7 +10,8 @@ from ai_helpers import (
     generate_portuguese_question,
     get_correct_answer_from_sympy,
     explain_like_coach,      # para explicações divertidas
-    ask_quick_question       # para perguntas do aluno
+    ask_quick_question,      # para perguntas do aluno
+    buscar_videos_youtube    # para recomendações de vídeos
 )
 
 st.set_page_config(page_title="Modo Livre — ETE Educa", layout="centered")
