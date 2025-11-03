@@ -11,7 +11,6 @@ from ai_helpers import (
     get_correct_answer_from_sympy,
     explain_like_coach,      # para explicações divertidas
     ask_quick_question,      # para perguntas do aluno
-    buscar_videos_youtube    # para recomendações de vídeos
 )
 
 st.set_page_config(page_title="Modo Livre — ETE Educa", layout="centered")
@@ -160,39 +159,6 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
 
             # Exibe a explicação com um emoji
             st.markdown(f"🧠 {explicacao_divertida}")
-            # 🔹 Recomendar vídeos do YouTube com base no tópico e matéria
-            from ai_helpers import buscar_videos_youtube
-
-            with st.spinner("Buscando vídeos explicativos no YouTube... 🎥"):
-                recomendacoes = buscar_videos_youtube(topico, materia)
-
-            if recomendacoes:
-                st.markdown("🎬 **Quer reforçar o conteúdo? Assista também:**")
-
-                video_html = ""
-                for v in recomendacoes:
-                    titulo = v.get("titulo", "Vídeo educativo")
-                    link = v.get("link", "")
-
-                    if link and "watch?v=" in link:
-                        video_id = link.split("watch?v=")[-1]
-                        thumbnail = f"https://img.youtube.com/vi/{video_id}/0.jpg"
-
-                        video_html += f"""
-                        <div style='display:flex;align-items:center;gap:12px;margin-bottom:12px;background:rgba(255,255,255,0.05);
-                                    padding:8px 12px;border-radius:10px;backdrop-filter:blur(4px);'>
-                            <img src='{thumbnail}' width='120' style='border-radius:8px;'>
-                            <div>
-                                <a href='{link}' target='_blank' style='font-size:16px;color:#00B4FF;text-decoration:none;'>
-                                    ▶️ {titulo}
-                                </a>
-                            </div>
-                        </div>
-                        """
-
-                st.markdown(video_html, unsafe_allow_html=True)
-
-
 
             # 🔹 Campo para o aluno perguntar sobre a explicação
     st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")

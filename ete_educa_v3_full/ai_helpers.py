@@ -4,7 +4,6 @@ import json
 import re
 import sympy as sp
 import math
-import requests
 import unicodedata
 from dataclasses import dataclass
 from dotenv import load_dotenv
@@ -309,52 +308,3 @@ def limpar_texto_pergunta(texto: str) -> str:
     texto = texto.replace("R8", "R$ 8").replace("R9", "R$ 9").replace("R1", "R$ 1")
 
     return texto
-
-def buscar_videos_youtube(topico, materia):
-    """
-    Busca vídeos educativos no YouTube via SerpAPI (Google Search).
-    Retorna até 3 resultados relevantes e seguros.
-    """
-    api_key = os.getenv("SERP_API_KEY")
-    if not api_key:
-        print("⚠️ SERP_API_KEY não configurada no .env")
-        return []
-
-    url = "https://serpapi.com/search"
-    pesquisas = [
-        f"aula {materia} {topico} explicação 9º ano site:youtube.com",
-        f"aula {topico} {materia} site:youtube.com"
-    ]
-
-    recomendacoes = []
-
-    try:
-        for termo in pesquisas:
-            params = {"engine": "google", "q": termo, "num": 5, "api_key": api_key}
-            r = requests.get(url, params=params)
-            data = r.json()
-
-            for item in data.get("organic_results", []):
-                link = item.get("link", "")
-                if "youtube.com/watch" in link:
-                    recomendacoes.append({
-                        "titulo": item.get("title", "Vídeo educativo"),
-                        "link": link
-                    })
-            if recomendacoes:
-                break
-
-        # 🔹 Garante máximo de 3 vídeos únicos
-        recomendacoes = recomendacoes[:3]
-
-        if not recomendacoes:
-            recomendacoes = [
-                {"titulo": "Matemática Básica — Professor Ferretto", "link": "https://www.youtube.com/watch?v=dz_1kzq0I3Y"},
-                {"titulo": "Interpretação de Texto — Professor Noslen", "link": "https://www.youtube.com/watch?v=XsN0e_xPyNI"}
-            ]
-
-        return recomendacoes
-
-    except Exception as e:
-        print(f"Erro ao buscar vídeos: {e}")
-        return []
