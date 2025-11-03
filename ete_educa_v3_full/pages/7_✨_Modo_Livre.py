@@ -168,8 +168,17 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
 
             if recomendacoes:
                 st.markdown("🎬 **Quer reforçar o conteúdo? Assista também:**")
+
                 for v in recomendacoes:
-                    st.markdown(f"- [{v['titulo']}]({v['link']})")
+                    titulo = v.get("titulo", "Vídeo educativo")
+                    link = v.get("link", "")
+
+                    if link:
+                        st.markdown(
+                            f"<a href='{link}' target='_blank' style='text-decoration:none; color:#00B4FF;'>▶️ {titulo}</a>",
+                            unsafe_allow_html=True
+                        )
+
 
 
             # 🔹 Campo para o aluno perguntar sobre a explicação
