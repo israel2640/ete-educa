@@ -430,8 +430,8 @@ def buscar_videos_youtube(topico, materia):
             ]
         else:
             recomendacoes = [
-                {"titulo": "Matemática Básica — Operações Fundamentais", "link": "https://www.youtube.com/watch?v=fUuZfKYQfA0"},
-                {"titulo": "Problemas matemáticos passo a passo", "link": "https://www.youtube.com/watch?v=84eJp5w1rRA"}
+                {"titulo": "Operações Fundamentais — Matemática do Zero (Professor Ferretto)", "link": "https://www.youtube.com/watch?v=l7YXcP7z6Wg"},
+                {"titulo": "Resolvendo Problemas Matemáticos — Canal Matemática em Exercícios", "link": "https://www.youtube.com/watch?v=3fdmKtx2bqE"}
             ]
 
     return recomendacoes
