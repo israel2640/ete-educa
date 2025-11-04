@@ -155,7 +155,12 @@ plano_guiado_completo = [
             "**Passo 1:** Vá para 📘 **Estudar** e complete as 4 lições.",
             "**Passo 2:** Vá para 🎯 **Treinar** e seja aprovado(a) nos treinos de todas elas."
         ],
-        "youtube_links": []
+        "youtube_links": [
+            ("NÚMEROS DECIMAIS)", "https://www.youtube.com/watch?v=BMufUaLtFQ0"),
+            ("POTENCIAÇÃO)", "https://www.youtube.com/watch?v=FzkAWvOAEUI"),
+            ("RAIZ QUADRADA EXATA)", "https://www.youtube.com/watch?v=66mfBcJXBfo"),
+            ("Sistema Legal de Medidas)", "https://www.youtube.com/watch?v=Y7XfqOpbg5c")
+        ]
     },
     {
         "dia": 10, "titulo": "Tópicos Estilísticos (Port)", "tarefa": "POR_05, POR_06, POR_07",
@@ -163,7 +168,11 @@ plano_guiado_completo = [
             "**Passo 1:** Vá para 📘 **Estudar** e complete as 3 lições.",
             "**Passo 2:** Vá para 🎯 **Treinar** e seja aprovado(a) nos treinos de todas elas."
         ],
-        "youtube_links": []
+        "youtube_links": [
+            ("SENTIDO DENOTATIVO X CONOTATIVO)", "https://www.youtube.com/watch?v=tFmSm1Gulig"),
+            ("VARIAÇÃO LINGUÍSTICA)", "https://www.youtube.com/watch?v=OWkrebsp8Ng"),
+            ("ESTRUTURA e FORMAÇÃO de PALAVRAS)", "https://www.youtube.com/watch?v=Gjv44CgF68Y")
+        ]
     },
     {
         "dia": 11, "titulo": "Álgebra Intermediária (Mat)", "tarefa": "MAT_13, MAT_14, MAT_15, MAT_16",
@@ -171,7 +180,12 @@ plano_guiado_completo = [
             "**Passo 1:** Vá para 📘 **Estudar** e complete as 4 lições.",
             "**Passo 2:** Vá para 🎯 **Treinar** e seja aprovado(a) nos treinos de todas elas."
         ],
-        "youtube_links": []
+        "youtube_links": [
+            ("POLINÔMIOS | VALOR NUMÉRICO)", "https://www.youtube.com/watch?v=DK2-sXRDPrw"),
+            ("PRODUTOS NOTÁVEIS | NUNCA MAIS ERRE)", "https://www.youtube.com/watch?v=UECy1XbL6w8"),
+            ("FATORAÇÃO ALGÉBRICA | RÁPIDO E FÁCIL)", "https://www.youtube.com/watch?v=BoJaNfpV4Tk"),
+            (" RADICIAÇÃO)", "https://www.youtube.com/watch?v=oJx5IbJYYfQ")
+        ]
     },
     {
         "dia": 12, "titulo": "Matemática Avançada (Mat)", "tarefa": "MAT_06, MAT_08, MAT_12, MAT_24, MAT_25",
@@ -181,7 +195,11 @@ plano_guiado_completo = [
             "**Passo 3:** Use a 🤖 **Revisão com IA** para tirar dúvidas sobre 'Média Harmônica' (MAT_25)."
         ],
         "youtube_links": [
-             ("Média Geométrica e Harmônica (Explicado)", "https://www.youtube.com/watch?v=8p_gPAj53rE")
+            ("EXPRESSÃO NUMÉRICA | 6º ao 9º ano)", "https://www.youtube.com/watch?v=tKVGMwRTBmk"),
+            ("RAZÃO E PROPORÇÃO)", "https://www.youtube.com/watch?v=bM9v6Bgp8qM"),
+            ("MÉDIA ARITMÉTICA e MÉDIA PONDERADA)", "https://www.youtube.com/watch?v=nRxl0WUplf4"),
+            (" RAIZ QUADRADA NÃO EXATA)", "https://www.youtube.com/watch?v=S96R5Sm4clE"),
+            (" RAIZ QUADRADA NÃO EXATA)", "https://www.youtube.com/watch?v=kEpXvjJCQBU")
         ]
     },
     {
