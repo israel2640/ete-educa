@@ -38,7 +38,7 @@ def init_github_client():
         return None, None
 
 # =====================================================
-# 🔹 Classe principal do motor de questões (Sua lógica)
+# 🔹 Classe principal do motor de questões (Sua lógica - SEM MUDANÇAS)
 # =====================================================
 class QuizEngine:
     def __init__(self, questoes_lista: List[Dict]):
@@ -81,13 +81,14 @@ class QuizEngine:
         return acertou, feedback
 
 # =====================================================
-# 🔹 Progresso Padrão (Sua lógica)
+# 🔹 Progresso Padrão (COM A MELHORIA "TREINO-LISTA")
 # =====================================================
 DEFAULT_USER_PROGRESS = {
     "aluna1": {
         "password": "123", # Senha padrão para o usuário padrão
-        "portugues": {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0},
-        "matematica": {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0},
+        # MELHORIA APLICADA: 'treinos_ok' (contador) virou 'treinos_ok_list' (lista)
+        "portugues": {"treinos_ok_list": [], "erros": [], "badges": [], "simulados": 0},
+        "matematica": {"treinos_ok_list": [], "erros": [], "badges": [], "simulados": 0},
         "reforco": [],
         "plano_14_dias": {str(dia+1): False for dia in range(14)},
         "nivel_atual": "Bronze"
@@ -95,7 +96,7 @@ DEFAULT_USER_PROGRESS = {
 }
 
 # =====================================================
-# 🔹 NOVO: Padrão Singleton - ProgressManager
+# 🔹 MELHORIA APLICADA: Padrão Singleton - ProgressManager
 # =====================================================
 class ProgressManager:
     """
@@ -121,7 +122,7 @@ class ProgressManager:
             self.progress_data: Dict[str, Any] = self._load_progress_from_github()
             self.initialized: bool = True
 
-    # --- Métodos Internos (Sua lógica do GitHub) ---
+    # --- Métodos Internos (Sua lógica do GitHub, agora como métodos) ---
 
     def _load_progress_from_github(self) -> Dict[str, Any]:
         """Carrega o progresso do GitHub. (Adaptado da sua função)"""
@@ -135,9 +136,7 @@ class ProgressManager:
             progress_dict = json.loads(content_decoded)
             return progress_dict
         except UnknownObjectException:
-            # O arquivo data/progress.json não existe no repo.
             print("AVISO: 'data/progress.json' não encontrado no GitHub. Usando padrão.")
-            # Retorna o padrão, mas não salva ainda.
             return DEFAULT_USER_PROGRESS
         except Exception as e:
             print(f"Erro ao carregar progresso do GitHub: {e}")
@@ -150,14 +149,11 @@ class ProgressManager:
             return
 
         try:
-            # Pega os dados ATUAIS da memória (self.progress_data)
             data_str = json.dumps(self.progress_data, indent=2, ensure_ascii=False)
             commit_message = f"Atualizando progresso ETE_Educa"
             
-            # Tenta pegar o arquivo para saber o "SHA" (ID da versão)
             try:
                 file = self.github_repo.get_contents(PROGRESS_FILE_PATH, ref="main")
-                # Se achou, atualiza o arquivo
                 self.github_repo.update_file(
                     path=PROGRESS_FILE_PATH,
                     message=commit_message,
@@ -167,7 +163,6 @@ class ProgressManager:
                 )
                 print("Progresso atualizado no GitHub.")
             except UnknownObjectException:
-                # Se não achou, cria o arquivo
                 self.github_repo.create_file(
                     path=PROGRESS_FILE_PATH,
                     message=commit_message + " (criação)",
@@ -176,13 +171,12 @@ class ProgressManager:
                 )
                 print("Arquivo de progresso criado no GitHub.")
 
-            # Limpa o cache para que a próxima *sessão* de usuário carregue do zero
             st.cache_data.clear()
             
         except Exception as e:
             print(f"Erro ao salvar progresso no GitHub: {e}")
 
-    # --- Métodos Públicos (Suas funções, agora como métodos) ---
+    # --- Métodos Públicos (Suas funções, agora como métodos + MELHORIA "TREINO-LISTA") ---
     
     def get_progress(self) -> Dict[str, Any]:
         """Retorna o dicionário de progresso que está em memória."""
@@ -191,33 +185,56 @@ class ProgressManager:
     def ensure_user(self, user, password):
         """Garante que o usuário exista no progresso (em memória)."""
         if user not in self.progress_data:
+            # MELHORIA APLICADA: Cria novo usuário com 'treinos_ok_list'
             self.progress_data[user] = {
                 "password": password, 
-                "portugues": {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0},
-                "matematica": {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0},
+                "portugues": {"treinos_ok_list": [], "erros": [], "badges": [], "simulados": 0},
+                "matematica": {"treinos_ok_list": [], "erros": [], "badges": [], "simulados": 0},
                 "reforco": [],
                 "plano_14_dias": {str(dia+1): False for dia in range(14)}, 
                 "nivel_atual": "Bronze"
             }
         
-        # Garante que as chaves de matéria existam (para perfis antigos)
-        if "portugues" not in self.progress_data[user]:
-             self.progress_data[user]["portugues"] = {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0}
-        if "matematica" not in self.progress_data[user]:
-            self.progress_data[user]["matematica"] = {"treinos_ok": 0, "erros": [], "badges": [], "simulados": 0}
-        if "reforco" not in self.progress_data[user]:
-            self.progress_data[user]["reforco"] = []
-        if "plano_14_dias" not in self.progress_data[user]:
-            self.progress_data[user]["plano_14_dias"] = {str(dia+1): False for dia in range(14)}
+        # MELHORIA APLICADA: Garante que perfis antigos sejam migrados
+        user_profile = self.progress_data[user]
         
-        # Não precisa retornar 'progress', pois estamos modificando self.progress_data
+        # Migra Português
+        if "portugues" not in user_profile:
+             user_profile["portugues"] = {"treinos_ok_list": [], "erros": [], "badges": [], "simulados": 0}
+        elif "treinos_ok_list" not in user_profile["portugues"]:
+             user_profile["portugues"]["treinos_ok_list"] = []
+             if "treinos_ok" in user_profile["portugues"]: # Remove contador antigo
+                 del user_profile["portugues"]["treinos_ok"]
+                 
+        # Migra Matemática
+        if "matematica" not in user_profile:
+            user_profile["matematica"] = {"treinos_ok_list": [], "erros": [], "badges": [], "simulados": 0}
+        elif "treinos_ok_list" not in user_profile["matematica"]:
+             user_profile["matematica"]["treinos_ok_list"] = []
+             if "treinos_ok" in user_profile["matematica"]: # Remove contador antigo
+                 del user_profile["matematica"]["treinos_ok"]
+
+        # Garante outras chaves
+        if "reforco" not in user_profile:
+            user_profile["reforco"] = []
+        if "plano_14_dias" not in user_profile:
+            user_profile["plano_14_dias"] = {str(dia+1): False for dia in range(14)}
 
     def add_reforco(self, user, lesson_id):
         if lesson_id not in self.progress_data[user]["reforco"]:
             self.progress_data[user]["reforco"].append(lesson_id)
 
     def set_train_ok(self, user, subject_key, lesson_id):
-        self.progress_data[user][subject_key]["treinos_ok"] = self.progress_data[user][subject_key].get("treinos_ok", 0) + 1
+        # MELHORIA APLICADA: Salva o ID da lição na lista
+        prog_materia = self.progress_data[user][subject_key]
+        
+        if "treinos_ok_list" not in prog_materia:
+             prog_materia["treinos_ok_list"] = []
+             
+        if lesson_id not in prog_materia["treinos_ok_list"]:
+            prog_materia["treinos_ok_list"].append(lesson_id)
+        
+        # Remove da lista de reforço (lógica original mantida)
         if lesson_id in self.progress_data[user]["reforco"]:
             self.progress_data[user]["reforco"].remove(lesson_id)
 
@@ -241,7 +258,7 @@ class ProgressManager:
 
         try:
             self.progress_data.pop(user)
-            self.save_progress() # <--- Salva a mudança no GitHub
+            self.save_progress() # Salva a mudança no GitHub
             return True, f"Perfil '{user}' deletado com sucesso."
         except Exception as e:
             return False, f"Erro ao deletar perfil: {e}"
@@ -261,7 +278,7 @@ class ProgressManager:
             return False, "Senha incorreta."
 
 # =====================================================
-# 🔹 NOVO: Função de Acesso ao Singleton
+# 🔹 MELHORIA APLICADA: Função de Acesso ao Singleton
 # =====================================================
 @st.cache_resource
 def get_progress_manager() -> ProgressManager:
@@ -271,8 +288,8 @@ def get_progress_manager() -> ProgressManager:
     """
     return ProgressManager()
 
-# =f====================================================
-# 🔹 Funções Utilitárias (Sua lógica, sem mudanças)
+# =====================================================
+# 🔹 Funções Utilitárias (Sua lógica - SEM MUDANÇAS)
 # =====================================================
 def shuffled_options(options):
     """Retorna as alternativas embaralhadas."""
