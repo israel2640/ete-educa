@@ -79,7 +79,9 @@
     "portugues": {
       "treinos_ok_list": [],
       "erros": [],
-      "badges": [],
+      "badges": [
+        "POR_01"
+      ],
       "simulados": 0
     },
     "matematica": {
