@@ -85,7 +85,7 @@ plano_guiado_completo = [
             "**Passo 3:** Vá para ✨ **Modo Livre** e pratique 5 questões de 'Pontuação'."
         ],
         "youtube_links": [
-            ("Uso da Vírgula (Aula Completa)", "https://www.youtube.com/watch?v=3zD5wNc-nDc")
+            ("Uso da Vírgula (Aula Completa)", "https://www.youtube.com/watch?v=3zD5wNc-nDc"),
             ("Orações Coordenadas e Subordinadas", "https://www.youtube.com/watch?v=C7uNZr13FoU")
         ]
     },
