@@ -275,7 +275,6 @@ def ask_quick_question(pergunta: str) -> str:
     )
     user = f"Dúvida da aluna: {pergunta}"
     return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1)
-import html
 
 def limpar_texto_pergunta(texto: str) -> str:
     """
