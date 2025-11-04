@@ -1,12 +1,16 @@
 import streamlit as st
 import os
-# Imports atualizados do engine
-from engine import load_progress, save_progress, ensure_user, delete_user, check_user_login
+# MUDANÇA 1: Imports atualizados
+# Trocamos TODAS as funções antigas pelo 'get_progress_manager'
+from engine import get_progress_manager
 
 st.set_page_config(page_title="ETE_Educa v4", page_icon="🎓", layout="centered")
 
-# Carrega o progresso UMA VEZ
-progress = load_progress()
+# MUDANÇA 2: Usando o Gerente para carregar
+# Pega o gerente (que já tem o progresso na memória)
+manager = get_progress_manager()
+# Pega o dicionário de progresso DELE
+progress = manager.get_progress()
 
 # Inicializa o usuário logado no st.session_state (memória)
 if "user" not in st.session_state:
@@ -19,7 +23,9 @@ st.divider()
 # --- 1. SE O ALUNO JÁ ESTÁ LOGADO ---
 if st.session_state.user:
     user = st.session_state.user
-    ensure_user(progress, user, "") # Garante que o usuário existe
+    
+    # MUDANÇA 3: Chamando o método do gerente
+    manager.ensure_user(user, "") # Garante que o usuário existe
     
     st.header(f"Olá, {user}! 👋")
     st.success(f"Você está logado como **{user}**. Use o menu ao lado para navegar.")
@@ -27,17 +33,15 @@ if st.session_state.user:
     # --- NOSSO DASHBOARD DE "GAMIFICAÇÃO" (Versão CORRIGIDA) ---
     st.subheader("Seu Progresso Atual")
     
-    # Carrega dados do usuário
+    # (Sua lógica aqui está PERFEITA e não precisa mudar, 
+    # pois 'progress' é o dicionário do gerente)
     user_data = progress[user]
     reforco_count = len(user_data.get("reforco", []))
     badges_port = len(user_data.get("portugues", {}).get("badges", []))
     badges_mat = len(user_data.get("matematica", {}).get("badges", []))
     
-    # --- ESTA É A LINHA QUE FALTAVA ---
     nivel_aluno = user_data.get("nivel_atual", "Bronze") # Pega o nível salvo
     
-    
-    # --- ESTAS SÃO AS COLUNAS CORRIGIDAS ---
     col1, col2, col3 = st.columns(3)
     col1.metric("🏆 Meu Nível", nivel_aluno) # EXIBE O NÍVEL
     col2.metric("🧠 Itens no Reforço", reforco_count)
@@ -65,7 +69,8 @@ else:
             login_submitted = st.form_submit_button("✅ Carregar Perfil")
             
             if login_submitted:
-                success, message = check_user_login(progress, selected_user, password_input)
+                # MUDANÇA 4: Usando o método do Gerente
+                success, message = manager.check_user_login(selected_user, password_input)
                 if success:
                     st.session_state.user = selected_user
                     st.rerun()
@@ -89,8 +94,9 @@ else:
                 elif novo_nome in progress:
                     st.error("Este nome já existe! Tente outro ou carregue o perfil acima.")
                 else:
-                    ensure_user(progress, novo_nome, nova_senha) # Cria o perfil com senha
-                    save_progress(progress) # Salva
+                    # MUDANÇA 5: Usando os métodos do Gerente
+                    manager.ensure_user(novo_nome, nova_senha) # Cria o perfil com senha
+                    manager.save_progress() # Salva o novo usuário no GitHub
                     st.session_state.user = novo_nome # Define como ativo
                     st.success(f"Perfil para '{novo_nome}' criado com sucesso!")
                     st.balloons()
@@ -110,9 +116,10 @@ else:
                 delete_submitted = st.form_submit_button(f"🗑️ Deletar perfil '{user_to_delete}'")
                 
                 if delete_submitted:
-                    success, message = delete_user(progress, user_to_delete, password_delete)
+                    # MUDANÇA 6: Usando o método do Gerente
+                    # (O método 'delete_user' do gerente já salva no GitHub)
+                    success, message = manager.delete_user(user_to_delete, password_delete)
                     if success:
-                        save_progress(progress)
                         st.success(message)
                         st.rerun()
                     else:
