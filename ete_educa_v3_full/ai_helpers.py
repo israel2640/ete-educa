@@ -123,9 +123,11 @@ Responda apenas com JSON no formato:
 def generate_portuguese_question(materia: str, topico: str) -> dict | None:
     system = (
         "Você é um criador de questões de português para o vestibular da ETE. "
-        "Crie uma questão completa com:\n"
+        "Crie questões focadas na **APLICAÇÃO PRÁTICA** das regras (análise de frases, identificação de erros, função em um trecho) "
+        "e **NÃO APENAS em definições teóricas**. " # <-- ADIÇÃO 1
+        "A questão deve ter:\n"
         "1️⃣ Um pequeno texto-base (3 a 5 linhas) coerente e claro.\n"
-        "2️⃣ Uma pergunta de interpretação sobre esse texto.\n"
+        "2️⃣ Uma pergunta de **análise ou aplicação** sobre o texto, baseada no tópico fornecido.\n" # <-- ADIÇÃO 2
         "3️⃣ Quatro alternativas (a, b, c, d).\n"
         "4️⃣ O campo 'correta' com a alternativa certa.\n"
         "5️⃣ Uma explicação textual mostrando por que essa é a correta.\n"
@@ -135,12 +137,17 @@ def generate_portuguese_question(materia: str, topico: str) -> dict | None:
 Matéria: {materia}
 Tópico: {topico}
 
+**Instrução Importante:** A pergunta deve ser sobre a **APLICAÇÃO PRÁTICA** do tópico '{topico}',
+não uma pergunta teórica ou de definição.
+(Ex: Se o tópico for 'Pontuação', pergunte 'Em qual frase a vírgula foi usada incorretamente?' ou 'Qual a função da vírgula no trecho X?').
+(Ex: Se o tópico for 'Conectivos', pergunte 'O conectivo "mas" no texto indica:').
+
 Responda apenas com JSON no formato:
 {{
-  "pergunta": "Qual das alternativas expressa melhor a ideia principal do texto?",
-  "opcoes": ["a) ...", "b) ...", "c) ...", "d) ..."],
-  "correta": "c) ...",
-  "explicacao": "💬 Explique por que esta é a alternativa correta."
+ "pergunta": "O texto-base que você criou... seguido da pergunta específica de aplicação.",
+ "opcoes": ["a) ...", "b) ...", "c) ...", "d) ..."],
+ "correta": "c) ...",
+ "explicacao": "💬 Explique por que esta é a alternativa correta."
 }}
 """
     return _generate_question(system, user, {"type": "json_object"})
