@@ -87,7 +87,9 @@
     "matematica": {
       "treinos_ok_list": [],
       "erros": [],
-      "badges": [],
+      "badges": [
+        "MAT_01"
+      ],
       "simulados": 0
     },
     "reforco": [],
