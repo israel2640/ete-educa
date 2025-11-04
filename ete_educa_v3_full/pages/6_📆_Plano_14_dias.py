@@ -1,6 +1,7 @@
 import streamlit as st
 import unicodedata
-from engine import load_progress, save_progress, ensure_user
+# MUDANÇA 1: Imports atualizados
+from engine import get_progress_manager 
 
 # ================================
 # 🔹 Configuração da página
@@ -12,7 +13,9 @@ st.caption("Seu guia de metas diárias. Siga o plano e marque as tarefas ao comp
 # ================================
 # 🔹 Carregar dados e verificar usuário
 # ================================
-progress = load_progress()
+# MUDANÇA 2: Usando o Gerente para carregar
+manager = get_progress_manager()
+progress = manager.get_progress()
 
 # --- BLOCO DE VERIFICAÇÃO DE PERFIL ---
 if "user" not in st.session_state or not st.session_state.user:
@@ -22,31 +25,29 @@ if "user" not in st.session_state or not st.session_state.user:
 
 usuario = st.session_state.user
 st.info(f"Aluno(a) logado: **{usuario}**") 
-ensure_user(progress, usuario, "") # Garante que o usuário existe
+
+# MUDANÇA 2 (continuação): Chamando o método do gerente
+manager.ensure_user(usuario, "") # Garante que o usuário existe
 # --- FIM DO BLOCO ---
 
 # ================================
 # 🔹 Carregar dados de progresso do aluno
 # ================================
+# (Sua lógica aqui está PERFEITA e não precisa mudar, 
+# pois 'progress' é o dicionário do gerente)
 user_progress = progress[usuario]
-# Carrega o plano salvo (ex: {"1": true, "2": false, ...})
 progresso_plano = user_progress.get("plano_14_dias", {str(dia+1): False for dia in range(14)})
-
-# Carrega o número de itens no reforço
 reforco_count = len(user_progress.get("reforco", []))
-# Carrega o número de simulados feitos
 simulados_feitos = user_progress.get("portugues", {}).get("simulados", 0) + user_progress.get("matematica", {}).get("simulados", 0)
 
 
 # ================================
 # 🔹 Estrutura base do plano (O NOVO GUIA)
 # ================================
-# Este plano foi criado com base no Edital (Conteúdo Programático) 
-# Ele alterna matérias para evitar zerar uma delas 
+# (Sua lógica aqui está PERFEITA e não precisa mudar)
 plano_base = [
-    # Semana 1: Fundações
     "**Português (Fundação):** 📘 Estudar e 🎯 Treinar a lição 'POR_01 - Compreensão de Texto'.",
-    "**Matemática (Fundação):** 📘 Estudar e 🎯 Treinar as lições 'MAT_01 - Quatro Operações'  e 'MAT_02 - Frações'.",
+    "**Matemática (Fundação):** 📘 Estudar e 🎯 Treinar as lições 'MAT_01 - Quatro Operações'  e 'MAT_02 - Frações'.",
     "**Português (Gramática Essencial):** 📘 Estudar e 🎯 Treinar 'POR_08 - Classes Gramaticais' e 'POR_09 - Conectivos'.",
     "**Matemática (Obrigatório):** 📘 Estudar e 🎯 Treinar 'MAT_11 - Porcentagem' e 'MAT_10 - Regra de Três'.",
     "**REVISÃO (Dia 1):** 🧠 Ir para a página de 'Reforço' e revisar os tópicos que você errou nos primeiros 4 dias.",
@@ -71,7 +72,8 @@ st.subheader("📚 Seu Plano de Estudos")
 # Garante que o progresso do plano seja salvo no formato correto
 if "plano_14_dias" not in user_progress:
      user_progress["plano_14_dias"] = progresso_plano
-     save_progress(progress)
+     # MUDANÇA 3: Salvando com o Gerente
+     manager.save_progress() 
 
 # Itera sobre o plano base e exibe os checkboxes
 for dia, tarefa in enumerate(plano_base, start=1):
@@ -88,39 +90,33 @@ for dia, tarefa in enumerate(plano_base, start=1):
         st.markdown(f"**Dia {dia}:** {tarefa}")
         
         # --- LÓGICA "INTELIGENTE" DE DICAS CONTEXTUAIS ---
-        
-        # Dica para 'Estudar' e 'Treinar'
+        # (Sua lógica aqui está PERFEITA e não precisa mudar)
         if "Estudar" in tarefa or "Treinar" in tarefa:
             st.info("💡 **Ação:** Vá para as páginas 📘 Estudar e 🎯 Treinar para completar esta meta.")
-        
-        # Dica para 'Reforço'
         elif "Reforço" in tarefa:
             if reforco_count == 0:
                 st.success("🎉 **Status:** Você não tem nenhum item pendente no reforço. Parabéns!")
             else:
                 st.warning(f"👉 **Ação:** Vá para a página 🧠 Reforço. Você tem **{reforco_count}** itens para revisar.")
-        
-        # Dica para 'Desafiar' (Simulado)
         elif "Desafiar" in tarefa or "Simulado" in tarefa:
             st.info(f"👉 **Ação:** Vá para a página ⏱️ Desafiar. (Você já completou {simulados_feitos} simulados).")
-        
-        # Dica para 'Revisão com IA'
         elif "Revisão com IA" in tarefa:
             st.info("💡 **Ação:** Vá para a página 🤖 Revisão com IA para tirar suas últimas dúvidas.")
-        
         else:
             pass # Não mostra dica para a tarefa de "Descansar"
 
     # Salva o novo estado SE ele mudou
     if progresso_plano.get(dia_str) != novo_estado:
         progresso_plano[dia_str] = novo_estado
-        save_progress(progress) # Salva a cada clique
+        # MUDANÇA 4: Salvando com o Gerente
+        manager.save_progress() # Salva a cada clique
     
     st.divider()
 
 # ================================
 # 🔹 Barra de progresso
 # ================================
+# (Sua lógica aqui está PERFEITA e não precisa mudar)
 concluidos = sum(1 for d in progresso_plano.values() if d)
 porcentagem = int((concluidos / 14) * 100)
 

@@ -1,8 +1,8 @@
 import streamlit as st
 import unicodedata
+# MUDANÇA 1: Imports atualizados
 from engine import (
-    load_lessons, load_progress, save_progress, ensure_user,
-    set_train_ok, shuffled_options, add_reforco, set_studied
+    load_lessons, get_progress_manager, shuffled_options
 )
 
 # ====== Configuração ======
@@ -22,28 +22,27 @@ def normalizar_materia(nome: str) -> str:
 # ==================================
 def check_answer():
     """Chamada IMEDIATAMENTE quando um botão de rádio é clicado."""
-    # Pega o 'key' do rádio que foi clicado
+    # (Sua lógica de callback está perfeita e não precisa de NENHUMA MUDANÇA)
     radio_key = st.session_state.last_radio_key
-    # Pega a resposta que o usuário clicou
     user_answer = st.session_state[radio_key]
     
-    # Pega a resposta correta e a explicação
     gabarito = st.session_state.current_gabarito
     explicacao = st.session_state.current_explicacao
     
-    # Compara (limpando espaços em branco)
     if user_answer.strip() == gabarito.strip():
         st.session_state.treino_feedback = f"✅ Correto! {explicacao}"
         st.session_state.treino_corrects += 1
     else:
         st.session_state.treino_feedback = f"❌ Errado! A resposta era '{gabarito}'.\n\n{explicacao}"
     
-    # Marca que esta pergunta foi respondida
     st.session_state.treino_answered = True
 
 # ====== Carregar dados ======
 lessons = load_lessons()
-progress = load_progress()
+
+# MUDANÇA 2: Usando o Gerente para carregar
+manager = get_progress_manager()
+progress = manager.get_progress()
 
 # --- NOVO BLOCO DE VERIFICAÇÃO DE PERFIL ---
 if "user" not in st.session_state or not st.session_state.user:
@@ -53,13 +52,16 @@ if "user" not in st.session_state or not st.session_state.user:
 
 user = st.session_state.user
 st.info(f"Aluno(a) logado: **{user}**") # Mostra quem está logado
-ensure_user(progress, user, "") # Garante que o usuário ainda existe no JSON
+
+# MUDANÇA 2 (continuação): Chamando o método do gerente
+manager.ensure_user(user, "") # Garante que o usuário ainda existe no JSON
 # --- FIM DO NOVO BLOCO ---
 
 materia = st.selectbox("Matéria", ["Português", "Matemática"], index=0)
 materia_key = normalizar_materia(materia)
 
 subs = [l for l in lessons if l.get("subject", "").lower() == materia_key]
+# (A lógica abaixo está perfeita, usa o 'progress' que pegamos do gerente)
 studied = set(progress[user].get(materia_key, {}).get("badges", []))
 ordered = [l for l in subs if l["id"] in studied] + [l for l in subs if l["id"] not in studied]
 
@@ -89,7 +91,7 @@ if total_questions == 0 and disable_train == False:
 # ==================================
 # 🔹 Lógica de Estado do Treino
 # ==================================
-# Reinicia o treino se a lição ou matéria mudar
+# (Sua lógica de estado está perfeita e não precisa de mudança)
 if "current_lesson_id" not in st.session_state or st.session_state.current_lesson_id != lesson["id"]:
     st.session_state.current_lesson_id = lesson["id"]
     st.session_state.treino_q_index = 0
@@ -103,50 +105,43 @@ st.divider()
 # ==================================
 # 🔹 Loop de Treino (Uma pergunta por vez)
 # ==================================
+# (Toda a sua lógica de quiz (callbacks, etc.) está perfeita e não precisa de mudança)
 if not disable_train and not st.session_state.treino_finished:
     
-    # Pega a pergunta atual
     q_index = st.session_state.treino_q_index
     q_data = train_questions[q_index]
     
     st.subheader(f"Pergunta {q_index + 1} de {total_questions}")
     st.markdown(f"**{q_data['q']}**")
     
-    # Prepara as variáveis para o callback
     st.session_state.current_gabarito = q_data["ans"]
     st.session_state.current_explicacao = q_data.get("exp", "Sem explicação.")
     radio_key = f"radio_q_{lesson['id']}_{q_index}"
     st.session_state.last_radio_key = radio_key
     
-    # Mostra o rádio (desabilitado se já foi respondido)
     st.radio(
         "Escolha:", 
         shuffled_options(q_data["opts"]), 
         key=radio_key, 
         index=None,
-        on_change=check_answer, # <--- AQUI ESTÁ A MÁGICA
+        on_change=check_answer, 
         disabled=st.session_state.treino_answered
     )
     
-    # --- Lógica de Feedback e Navegação ---
     if st.session_state.treino_answered:
-        # Mostra o feedback (Certo ou Errado)
         feedback = st.session_state.treino_feedback
         if "✅" in feedback:
             st.success(feedback)
         else:
             st.error(feedback)
             
-        # Verifica se é a última questão
         if q_index < total_questions - 1:
-            # Se não for, mostra o botão "Próxima"
             if st.button("Próxima Questão ➡️"):
                 st.session_state.treino_q_index += 1
                 st.session_state.treino_answered = False
                 st.session_state.treino_feedback = ""
                 st.rerun()
         else:
-            # Se for a última, mostra o botão "Finalizar"
             if st.button("Ver Resultado Final 🏁"):
                 st.session_state.treino_finished = True
                 st.rerun()
@@ -163,14 +158,17 @@ if st.session_state.treino_finished:
     min_acertos = max(1, int(total * 0.7)) # Pelo menos 1 acerto ou 70%
 
     if corrects >= min_acertos:
-        set_train_ok(progress, user, materia_key, lesson["id"])
+        # MUDANÇA 3: Usando os métodos do Gerente
+        manager.set_train_ok(user, materia_key, lesson["id"])
         st.success("🏆 Treino aprovado!")
         st.balloons()
     else:
-        add_reforco(progress, user, lesson["id"]) # Adiciona ao 'reforco'
+        # MUDANÇA 3: Usando os métodos do Gerente
+        manager.add_reforco(user, lesson["id"]) # Adiciona ao 'reforco'
         st.warning("⚠️ Treino não aprovado. Este tema foi adicionado ao modo 'Reforço' para revisão.")
     
-    save_progress(progress) # Salva o resultado no GitHub
+    # MUDANÇA 3: Salvando com o Gerente
+    manager.save_progress() # Salva o resultado no GitHub
     
     if st.button("Treinar outra lição"):
         st.session_state.treino_finished = False
@@ -184,6 +182,7 @@ if st.session_state.treino_finished:
 # ==================================
 # 🔹 Indicador de Progresso (Rodapé)
 # ==================================
+# (Sua lógica aqui está perfeita e não precisa de mudança)
 if materia_key not in progress[user]:
     progress[user][materia_key] = {"treinos_ok": 0}
 

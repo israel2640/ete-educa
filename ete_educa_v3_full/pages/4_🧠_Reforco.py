@@ -1,7 +1,9 @@
 import streamlit as st
 import unicodedata
-from engine import load_lessons, load_progress, save_progress, ensure_user
+# MUDANÇA 1: Imports atualizados
+from engine import load_lessons, get_progress_manager
 from ai_helpers import explain_like_coach
+
 # ==========================
 # 🔹 Configuração da página
 # ==========================
@@ -20,7 +22,9 @@ def normalizar_materia(nome: str) -> str:
 # 🔹 Carregar dados
 # ==========================
 lessons = load_lessons()
-progress = load_progress()
+# MUDANÇA 2: Usando o Gerente para carregar
+manager = get_progress_manager()
+progress = manager.get_progress()
 
 # --- NOVO BLOCO DE VERIFICAÇÃO DE PERFIL ---
 if "user" not in st.session_state or not st.session_state.user:
@@ -31,8 +35,8 @@ if "user" not in st.session_state or not st.session_state.user:
 user = st.session_state.user
 st.info(f"Aluno(a) logado: **{user}**") # Mostra quem está logado
 
-
-ensure_user(progress, user, "")
+# MUDANÇA 2 (continuação): Chamando o método do gerente
+manager.ensure_user(user, "")
 
 materia = st.selectbox("Matéria", ["Português", "Matemática"], index=0)
 materia_key = normalizar_materia(materia)
@@ -40,6 +44,8 @@ materia_key = normalizar_materia(materia)
 # ==========================
 # 🔹 Carregar lista de reforço
 # ==========================
+# (Sua lógica aqui está PERFEITA e não precisa mudar, 
+# pois 'progress' é o dicionário do gerente)
 lista_reforco_ids = progress[user].get("reforco", [])
 
 if not lista_reforco_ids:
@@ -82,10 +88,15 @@ for lesson in lessons:
             for i, q in enumerate(lesson.get("train_questions", []), start=1):
                 st.markdown(f"**{i}. {q['q']}**")
                 st.info(f"💡 Explicação: {q.get('exp', 'Sem explicação cadastrada.')}")
-                        # --- NOVO BOTÃO: MARCAR COMO CONCLUÍDO ---
+                        
+        # --- NOVO BOTÃO: MARCAR COMO CONCLUÍDO ---
         if st.button(f"✅ Marcar '{lesson['title']}' como concluído", key=f"done_{lesson['id']}"):
+            # (Modificar o 'progress' em memória está CORRETO)
             progress[user]["reforco"].remove(lesson["id"])
-            save_progress(progress)
+            
+            # MUDANÇA 3: Salvando com o Gerente
+            manager.save_progress()
+            
             st.success(f"Parabéns! O tema **{lesson['title']}** foi concluído e removido da lista de reforço. 🎯")
             st.rerun()
 

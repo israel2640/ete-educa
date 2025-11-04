@@ -2,7 +2,8 @@ import streamlit as st
 import random, base64, time
 import unicodedata 
 from data.simulado_loader import gerar_prova 
-from engine import load_progress, save_progress, ensure_user, add_reforco
+# MUDANÇA 1: Imports atualizados
+from engine import get_progress_manager 
 
 # ====== Configuração ======
 st.set_page_config(page_title="Desafiar — ETE Educa", layout="centered")
@@ -18,7 +19,9 @@ if "fase" not in st.session_state:
     st.session_state.erros = 0
     st.session_state.feedback = "" 
 
-progress = load_progress()
+# MUDANÇA 2: Usando o Gerente para carregar
+manager = get_progress_manager()
+progress = manager.get_progress()
 
 # --- NOVO BLOCO DE VERIFICAÇÃO DE PERFIL ---
 if "user" not in st.session_state or not st.session_state.user:
@@ -29,8 +32,8 @@ if "user" not in st.session_state or not st.session_state.user:
 user = st.session_state.user
 st.info(f"Aluno(a) logado: **{user}**") # Mostra quem está logado
 
-
-ensure_user(progress, user, "")
+# MUDANÇA 2 (continuação): Chamando o método do gerente
+manager.ensure_user(user, "")
 
 # ====== Função auxiliar padronizada ======
 def normalizar_materia(nome: str) -> str:
@@ -97,27 +100,24 @@ elif st.session_state.fase == "questao":
 elif st.session_state.fase == "feedback_simulado":
     st.subheader(f"Questão {st.session_state.q_atual + 1}/{len(st.session_state.questoes)}")
     
-    # Pega a lição correspondente a esta questão
     q = st.session_state.questoes[st.session_state.q_atual]
-    lesson_id = q.get("lesson_id") # Pega o ID que mapeamos
+    lesson_id = q.get("lesson_id") 
     
     if "✅" in st.session_state.feedback:
         st.success(st.session_state.feedback)
     else:
         st.error(st.session_state.feedback)
         
-        # --- AQUI ESTÁ A LÓGICA QUE FALTAVA ---
         if lesson_id:
-            # 'user' foi definido no bloco de login
-            add_reforco(progress, user, lesson_id) 
-            save_progress(progress)
+            # MUDANÇA 3: Usando os métodos do Gerente
+            manager.add_reforco(user, lesson_id) 
+            manager.save_progress() # Salva a adição ao reforço
             st.warning(f"💡 Esta lição ({q.get('tema')}) foi adicionada ao seu '🧠 Reforço' para revisão!")
-        # --- FIM DA LÓGICA QUE FALTAVA ---
     
     if st.button("Próxima Questão ➡️"):
         st.session_state.q_atual += 1
         st.session_state.fase = "questao"
-        st.session_state.feedback = "" # Limpa o feedback
+        st.session_state.feedback = "" 
         st.rerun()
 
 
@@ -131,7 +131,7 @@ elif st.session_state.fase == "resultado":
         st.session_state.fase = "inicio"
         if st.button("Voltar"):
             st.rerun()
-        
+            
     else:
         st.write(f"✅ Acertos: {st.session_state.acertos}")
         st.write(f"❌ Erros: {st.session_state.erros}")
@@ -155,9 +155,12 @@ elif st.session_state.fase == "resultado":
 
         materia_key = normalizar_materia(st.session_state.materia)
 
+        # MUDANÇA 4: Salvando o resultado final com o Gerente
+        # (A lógica interna está perfeita, só precisamos mudar a chamada final)
         progress[user][materia_key]["simulados"] = progress[user][materia_key].get("simulados", 0) + 1
         progress[user]["nivel_atual"] = nivel
-        save_progress(progress)
+        
+        manager.save_progress() # Salva o dicionário 'progress' da memória no GitHub
 
         if st.button("🔁 Refazer Simulado"):
             st.session_state.fase = "inicio"
