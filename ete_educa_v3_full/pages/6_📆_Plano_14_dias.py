@@ -59,7 +59,8 @@ plano_guiado_completo = [
             "**Passo 3:** Vá para ✨ **Modo Livre** e pratique 5 questões de 'Frações'."
         ],
         "youtube_links": [
-            ("Como resolver problemas com Frações (Exemplo)", "https://www.youtube.com/watch?v=9DpDTkRxcCs"),
+            ("Como resolver problemas com Frações)", "https://www.youtube.com/watch?v=9DpDTkRxcCs"),
+            ("PROBLEMAS ENVOLVENDO AS QUATRO OPERAÇÕES)", "https://www.youtube.com/watch?v=4PqECm1OA7U"),
             ("Fração exercícios | Adição e Subtração com Fração)", "https://www.youtube.com/watch?v=7Bh-kMLzI1I"),
             ("Interpretação de Texto para Concursos (Dica)", "https://www.youtube.com/watch?v=W3XrpIRTgzA")
         ]
