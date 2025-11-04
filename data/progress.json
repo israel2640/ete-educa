@@ -11,7 +11,9 @@
         "POR_05"
       ],
       "simulados": 0,
-      "treinos_ok_list": []
+      "treinos_ok_list": [
+        "POR_01"
+      ]
     },
     "matematica": {
       "erros": [],
