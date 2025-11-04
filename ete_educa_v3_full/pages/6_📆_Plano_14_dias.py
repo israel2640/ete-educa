@@ -96,7 +96,10 @@ plano_guiado_completo = [
             "**Passo 2:** Vá para 🎯 **Treinar** e seja aprovado(a) nos treinos de ambas.",
             "**Passo 3:** Vá para ✨ **Modo Livre** e pratique 5 questões de 'Equações 1º Grau'."
         ],
-        "youtube_links": [] # ADICIONE SEUS LINKS AQUI
+        "youtube_links": [
+            ("EXPRESSÕES ALGÉBRICAS | RÁPIDO e FÁCIL", "https://www.youtube.com/watch?v=8NNA-8rimNs"),
+            ("SISTEMA DE EQUAÇÕES DO PRIMEIRO 1º GRAU", "https://www.youtube.com/watch?v=cs0BdQyP7ZY")
+        ]
     },
     {
         "dia": 5, "titulo": "Gramática Chave (Port)", "tarefa": "POR_11, POR_12",
@@ -106,7 +109,7 @@ plano_guiado_completo = [
             "**Passo 3:** Vá para ✨ **Modo Livre** e pratique 5 questões de 'Crase'."
         ],
         "youtube_links": [
-            ("Quando usar Crase (Aula Definitiva)", "https://www.youtube.com/watch?v=Ody021-3pSM")
+            ("Quando usar Crase (Aula Definitiva)", "https://www.youtube.com/watch?v=KpQzFnQ5qys")
         ]
     },
     {
@@ -116,7 +119,10 @@ plano_guiado_completo = [
             "**Passo 2:** Vá para 🎯 **Treinar** e seja aprovado(a) nos treinos de todas elas.",
             "**Passo 3:** Vá para ✨ **Modo Livre** e pratique 5 questões de 'Ângulos' ou 'Triângulos'."
         ],
-        "youtube_links": []
+        "youtube_links": [
+            ("ÂNGULOS - DEFINIÇÃO E TIPOS DE ÂNGULOS", "https://www.youtube.com/watch?v=nAvqZSglTmA&list=PLGyv8aUrOlzCPgrgtVsHnLO4V8xoTyZ-c&index=1"),
+            ("POLÍGONOS | RÁPIDO e FÁCIL", "https://www.youtube.com/watch?v=LI8rDyEMQ74")
+        ]
     },
     {
         "dia": 7, "titulo": "REVISÃO (Dia 1) + Simulado", "tarefa": "Zerar o reforço e fazer 1 simulado.",
@@ -125,7 +131,9 @@ plano_guiado_completo = [
             "**Passo 2:** Vá para a página ⏱️ **Desafiar** e faça 1 simulado (10 questões) da matéria que tiver MAIS dificuldade.",
             "**Passo 3:** Descanse!"
         ],
-        "youtube_links": []
+        "youtube_links": [
+            ("DICAS", "https://www.youtube.com/watch?v=PiRXPKcIYt4")
+        ]
     },
     
     # --- SEMANA 2: TÓPICOS INTERMEDIÁRIOS E FINAIS ---
@@ -135,7 +143,11 @@ plano_guiado_completo = [
             "**Passo 1:** Vá para 📘 **Estudar** e complete as 3 lições.",
             "**Passo 2:** Vá para 🎯 **Treinar** e seja aprovado(a) nos treinos de todas elas."
         ],
-        "youtube_links": []
+        "youtube_links": [
+            ("COESÃO E COERÊNCIA: NUNCA MAIS ERRE)", "https://www.youtube.com/watch?v=WsY0MbTlPIY"),
+            ("TIPOS e GÊNEROS TEXTUAIS", "https://www.youtube.com/watch?v=keri15mSleA"),
+            ("Semântica", "https://www.youtube.com/watch?v=1F-OMWg2rEI")
+        ]
     },
     {
         "dia": 9, "titulo": "Números e Medidas (Mat)", "tarefa": "MAT_03, MAT_04, MAT_05, MAT_07",
