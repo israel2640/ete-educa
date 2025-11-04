@@ -2,7 +2,7 @@ import streamlit as st
 import unicodedata
 import re
 import sympy as sp
-import time # Importação do temporizador
+import time 
 
 # 🔹 Importações corretas das funções de IA (COM A CORREÇÃO)
 from ai_helpers import (
@@ -11,7 +11,7 @@ from ai_helpers import (
     get_correct_answer_from_sympy,
     explain_like_coach,      # para explicações divertidas
     ask_quick_question,      # para perguntas do aluno
-    limpar_texto_pergunta  # <--- CORREÇÃO APLICADA AQUI
+    limpar_texto_pergunta  # Importação corrigida
 )
 
 st.set_page_config(page_title="Modo Livre — ETE Educa", layout="centered")
@@ -79,7 +79,7 @@ if st.button(f"Gerar Pergunta Inédita sobre {topico}"):
 
         # 2) Se gerou, LIMPA primeiro
         if q_data:
-            # 🔹 Limpa textos bugados (agora a função existe)
+            # 🔹 Limpa textos bugados
             if "pergunta" in q_data:
                 q_data["pergunta"] = limpar_texto_pergunta(q_data["pergunta"])
             if "texto" in q_data:
@@ -186,67 +186,98 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
 
             st.subheader("Explicação do Mestre:")
 
+            # 'explicacao_divertida' É DEFINIDA AQUI
             explicacao_original = q_data.get("explicacao", "Sem explicação disponível.")
             explicacao_divertida = explain_like_coach(explicacao_original, materia)
 
             st.markdown(f"🧠 {explicacao_divertida}")
+            
+            
+            # ==========================================================
+            # 🔹 CORREÇÃO: TODO O BLOCO DE CHAT FOI MOVIDO PARA CÁ
+            # ==========================================================
+            
+            st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")
 
-            # 🔹 Campo para o aluno perguntar sobre a explicação
-    st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")
+            # --- Inicializa variáveis ---
+            if "chat_duvidas" not in st.session_state:
+                st.session_state.chat_duvidas = []
+            if "limpar_input" not in st.session_state:
+                st.session_state.limpar_input = False
 
-    # --- Inicializa variáveis ---
-    if "chat_duvidas" not in st.session_state:
-        st.session_state.chat_duvidas = []
-    if "limpar_input" not in st.session_state:
-        st.session_state.limpar_input = False
+            if st.session_state.limpar_input:
+                st.session_state.limpar_input = False
+                st.session_state.pergunta_aluno = ""
 
-    if st.session_state.limpar_input:
-        st.session_state.limpar_input = False
-        st.session_state.pergunta_aluno = ""
+            # --- Exibe histórico do chat ---
+            if st.session_state.chat_duvidas:
+                st.markdown("🧠 **Chat com a Professora IA**")
+                st.markdown("""
+                <style>
+                    .chat-container {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 12px;
+                        margin-top: 10px;
+                    }
+                    .mensagem-aluno {
+                        align-self: flex-end;
+                        background: linear-gradient(135deg, #0078D7, #00B4FF);
+                        color: white;
+                        padding: 10px 14px;
+                        border-radius: 18px 18px 0px 18px;
+                        max-width: 70%;
+                        box-shadow: 0px 2px 5px rgba(0,0,0,0.15);
+                    }
+                    .mensagem-professora {
+                        align-self: flex-start;
+                        background: #FFFBEA;
+                        color: #333;
+                        padding: 10px 14px;
+                        border-radius: 18px 18px 18px 0px;
+                        max-width: 80%;
+                        border: 1px solid #FFE58A;
+                        box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+                    }
+                </style>
+                """, unsafe_allow_html=True) 
 
-    # --- Exibe histórico do chat ---
-    if st.session_state.chat_duvidas:
-        st.markdown("🧠 **Chat com a Professora IA**")
-        st.markdown("""
-        <style>
-            .chat-container { ... } 
-            .mensagem-aluno { ... } 
-            .mensagem-professora { ... }
-        </style>
-        """, unsafe_allow_html=True) # (Estilos CSS ocultos por brevidade)
+                st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
+                for msg in st.session_state.chat_duvidas:
+                    st.markdown(f"""
+                    <div class='mensagem-aluno'><b>👦 Você:</b> {msg["pergunta"]}</div>
+                    <div class='mensagem-professora'><b>👩‍🏫 Professora:</b> {msg["resposta"]}</div>
+                    """, unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
-        for msg in st.session_state.chat_duvidas:
-            st.markdown(f"""
-            <div class='mensagem-aluno'><b>👦 Você:</b> {msg["pergunta"]}</div>
-            <div class='mensagem-professora'><b>👩‍🏫 Professora:</b> {msg["resposta"]}</div>
-            """, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+            # --- Campo de entrada ---
+            st.divider()
+            pergunta_aluno = st.text_input("Digite sua pergunta aqui:", key="pergunta_aluno")
 
-    # --- Campo de entrada ---
-    st.divider()
-    pergunta_aluno = st.text_input("Digite sua pergunta aqui:", key="pergunta_aluno")
+            if pergunta_aluno:
+                with st.spinner("A professora está pensando... 🤔"):
+                    # AGORA 'explicacao_divertida' GARANTIDAMENTE EXISTE
+                    resposta_duvida = ask_quick_question(
+                        f"Matéria: {materia}\n\nExplicação: {explicacao_divertida}\n\nPergunta do aluno: {pergunta_aluno}"
+                    )
 
-    if pergunta_aluno:
-        with st.spinner("A professora está pensando... 🤔"):
-            resposta_duvida = ask_quick_question(
-                f"Matéria: {materia}\n\nExplicação: {explicacao_divertida}\n\nPergunta do aluno: {pergunta_aluno}"
-            )
+                st.session_state.chat_duvidas.append({
+                    "pergunta": pergunta_aluno,
+                    "resposta": resposta_duvida
+                })
 
-        st.session_state.chat_duvidas.append({
-            "pergunta": pergunta_aluno,
-            "resposta": resposta_duvida
-        })
+                st.session_state.limpar_input = True
+                st.rerun()
 
-        st.session_state.limpar_input = True
-        st.rerun()
+            # --- Botão de limpar conversa ---
+            if st.session_state.chat_duvidas:
+                st.divider()
+                if st.button("🧹 Limpar conversa"):
+                    st.session_state.chat_duvidas = []
+                    st.session_state.limpar_input = True
+                    st.rerun()
 
-    # --- Botão de limpar conversa ---
-    if st.session_state.chat_duvidas:
-        st.divider()
-        if st.button("🧹 Limpar conversa"):
-            st.session_state.chat_duvidas = []
-            st.session_state.limpar_input = True
-            st.rerun()
-
-    st.caption("💬 O chat fica salvo enquanto você estiver nesta sessão 👩‍🏫")
+            st.caption("💬 O chat fica salvo enquanto você estiver nesta sessão 👩‍🏫")
+            # ==========================================================
+            # 🔹 FIM DO BLOCO DE CHAT MOVIDO
+            # ==========================================================
