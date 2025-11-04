@@ -2,24 +2,25 @@
   "Bianca": {
     "password": "2640",
     "portugues": {
-      "treinos_ok": 5,
       "erros": [],
       "badges": [
         "POR_01",
         "POR_02",
         "POR_03",
-        "POR_04"
+        "POR_04",
+        "POR_05"
       ],
-      "simulados": 0
+      "simulados": 0,
+      "treinos_ok_list": []
     },
     "matematica": {
-      "treinos_ok": 5,
       "erros": [],
       "badges": [
         "MAT_01",
         "MAT_02"
       ],
-      "simulados": 0
+      "simulados": 0,
+      "treinos_ok_list": []
     },
     "reforco": [],
     "nivel": "Bronze",
