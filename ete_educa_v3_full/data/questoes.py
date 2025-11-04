@@ -713,5 +713,45 @@ questoes_matematica = [
                 "exp": "Bissetriz = 'Bi' (dois) + 'setriz' (corte). Ela corta o ângulo em dois."
             }
         ]
+    },
+    {
+        "id": "MAT_24",
+        "subject": "matematica",
+        "title": "Raiz Quadrada (Aproximação Decimal)",
+        "lesson_text": "O que fazer quando a raiz não é exata (ex: $\sqrt{10}$)? Você precisa 'cercar' ela. Pense: Qual a raiz exata *antes* e *depois* dela?\n- $\sqrt{9} = 3$\n- $\sqrt{10} = ?$\n- $\sqrt{16} = 4$\nIsso significa que a $\sqrt{10}$ está em algum lugar entre o 3 e o 4. Como 10 está mais perto do 9, a resposta será '3,alguma coisinha' (ex: 3,1 ou 3,2).",
+        "example": "Para achar $\sqrt{80}$: Está entre $\sqrt{64} = 8$ e $\sqrt{81} = 9$. Como 80 está 'colado' no 81, a resposta será um número muito próximo de 9 (ex: 8,9).",
+        "train_questions": [
+            {
+                "q": "O número $\sqrt{30}$ está localizado na reta numérica entre quais dois números inteiros?",
+                "opts": [
+                    "4 e 5",
+                    "5 e 6",
+                    "6 e 7",
+                    "29 e 31"
+                ],
+                "ans": "5 e 6",
+                "exp": "Para 'cercar' o $\sqrt{30}$, procuramos os quadrados perfeitos mais próximos. $\sqrt{25} = 5$ e $\sqrt{36} = 6$. Como 30 está entre 25 e 36, a raiz de 30 tem que estar entre 5 e 6."
+            }
+        ]
+    },
+    {
+        "id": "MAT_25",
+        "subject": "matematica",
+        "title": "Outras Médias (Geométrica e Harmônica)",
+        "lesson_text": "Além da Média Aritmética (somar e dividir) e Ponderada (dos pesos), o edital  cita outras duas. Elas são raras, mas é bom saber:\n1. **Média Geométrica (MG):** Usada para taxas de crescimento. Você multiplica os 'n' números e tira a raiz 'n' (Ex: se forem 2 números, tire a raiz quadrada; se forem 3, a raiz cúbica).\n2. **Média Harmônica (MH):** Usada para velocidades médias. É a 'inversa da média dos inversos'. Para 2 números 'a' e 'b', a fórmula é $MH = 2 / (1/a + 1/b)$.",
+        "example": "Média Geométrica entre 4 e 9: $MG = \sqrt{4 \times 9} = \sqrt{36} = 6$.\nMédia Harmônica entre 2 e 3: $MH = 2 / (1/2 + 1/3) = 2 / (5/6) = 12/5 = 2,4$.",
+        "train_questions": [
+            {
+                "q": "Um carro sobe uma ladeira a 20 km/h e desce a mesma ladeira a 30 km/h. Qual a sua velocidade média (Média Harmônica)?",
+                "opts": [
+                    "25 km/h (Média Aritmética)",
+                    "24 km/h (Média Harmônica)",
+                    "22 km/h",
+                    "50 km/h"
+                ],
+                "ans": "24 km/h (Média Harmônica)",
+                "exp": "Velocidade média usa Média Harmônica. $MH = 2 / (1/20 + 1/30) = 2 / (3/60 + 2/60) = 2 / (5/60) = 2 \times (60/5) = 120/5 = 24$ km/h."
+            }
+        ]
     }
 ]
