@@ -199,7 +199,7 @@ plano_guiado_completo = [
             ("RAZÃO E PROPORÇÃO)", "https://www.youtube.com/watch?v=bM9v6Bgp8qM"),
             ("MÉDIA ARITMÉTICA e MÉDIA PONDERADA)", "https://www.youtube.com/watch?v=nRxl0WUplf4"),
             (" RAIZ QUADRADA NÃO EXATA)", "https://www.youtube.com/watch?v=S96R5Sm4clE"),
-            (" RAIZ QUADRADA NÃO EXATA)", "https://www.youtube.com/watch?v=kEpXvjJCQBU")
+            (" MÉDIA GEOMÉTRICA)", "https://www.youtube.com/watch?v=mVdJR2jjDiY")
         ]
     },
     {
@@ -208,7 +208,11 @@ plano_guiado_completo = [
             "**Passo 1:** Vá para 📘 **Estudar** e complete as 3 lições.",
             "**Passo 2:** Vá para 🎯 **Treinar** e seja aprovado(a) nos treinos de todas elas."
         ],
-        "youtube_links": []
+        "youtube_links": [
+            ("GRANDEZAS DIRETAMENTE E INVERSAMENTE PROPORCIONAIS | DIVISÃO", "https://www.youtube.com/watch?v=XVPo3mD3LIU"),
+            ("SEMELHANÇA DE TRIÂNGULOS)", "https://www.youtube.com/watch?v=JBP0ryUtJmg"),
+            ("ALTURA, MEDIANA E BISSETRIZ DE UM TRIÂNGULO)", "https://www.youtube.com/watch?v=aqYHjbaBpw4")
+        ]
     },
     {
         "dia": 14, "titulo": "SIMULADO FINAL E REVISÃO", "tarefa": "Simulado Completo (20q) + Zerar Reforço.",
@@ -217,7 +221,9 @@ plano_guiado_completo = [
             f"**Passo 2:** Vá para 🧠 **Reforço**. Zere sua lista! Você tem **{reforco_count}** itens.",
             "**Passo 3:** Descanse. Você cobriu 100% do edital. Boa prova!"
         ],
-        "youtube_links": []
+        "youtube_links": [
+            ("DICAS", "https://www.youtube.com/watch?v=tfzx50k0Ww8")
+        ]
     }
 ]
 
