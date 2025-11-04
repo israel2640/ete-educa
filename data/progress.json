@@ -24,7 +24,9 @@
       "simulados": 0,
       "treinos_ok_list": []
     },
-    "reforco": [],
+    "reforco": [
+      "POR_04"
+    ],
     "nivel": "Bronze",
     "plano_14_dias": {
       "1": true,
