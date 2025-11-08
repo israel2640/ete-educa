@@ -282,6 +282,7 @@ def limpar_texto_pergunta(texto: str) -> str:
     - Adiciona espaço depois de valores monetários (R6,00de → R$ 6,00 de)
     - Decodifica HTML
     - Remove tags e símbolos estranhos
+    - CORREÇÃO PRINCIPAL: Normaliza pontuação e caracteres Unicode
     """
 
     if not texto:
@@ -289,28 +290,40 @@ def limpar_texto_pergunta(texto: str) -> str:
 
     # 1️⃣ Decodifica HTML (&eacute;, &ccedil;, etc.)
     texto = html.unescape(texto)
+    
+    # 2️⃣ CORREÇÃO 1: Normaliza o texto para remover acentos e caracteres estranhos
+    # Isso transforma o "−" (MINUS SIGN) em "-" (HYPHEN-MINUS)
+    texto = unicodedata.normalize('NFKC', texto)
 
-    # 2️⃣ Garante que o símbolo de moeda esteja correto
+    # 3️⃣ CORREÇÃO 2: Adiciona espaço antes de pontuações grudadas (sinais de moeda, ponto final)
+    # Isso transforma "R$87.Sabe" em "R$ 87. Sabe"
+    texto = re.sub(r'([.,;!?:])([A-Za-z])', r'\1 \2', texto) 
+    
+    # 4️⃣ Garante que o símbolo de moeda esteja correto
     texto = texto.replace("R$", "R$ ")
-    texto = re.sub(r"R\s*(\d)", r"R$ \1", texto)  # R6 → R$ 6
-    texto = re.sub(r"R\$\s*,", "R$ 0,", texto)     # R$,00 → R$ 0,00 (casos raros)
+    texto = re.sub(r"R\s*(\d)", r"R$ \1", texto)  # R 6 → R$ 6
+    texto = re.sub(r"R\$([^\s])", r"R$ \1", texto) # Garante espaço após R$
+    texto = re.sub(r"R\$\s*,", "R$ 0,", texto)     
 
-    # 3️⃣ Corrige números grudados em palavras
+    # 5️⃣ Corrige números grudados em palavras
     texto = re.sub(r"(\d)([A-Za-z])", r"\1 \2", texto)  # 24cada → 24 cada
     texto = re.sub(r"([A-Za-z])(\d)", r"\1 \2", texto)  # Rde2 → R de 2
-    texto = re.sub(r"(\d,\d{2})([A-Za-z])", r"\1 \2", texto)  # 6,00de → 6,00 de
+    texto = re.sub(r"(\d[,.]\d{2})([A-Za-z])", r"\1 \2", texto)  # 6,00de → 6,00 de
 
-    # 4️⃣ Remove tags ou caracteres estranhos
+    # 6️⃣ Remove tags ou caracteres estranhos
     texto = re.sub(r"<[^>]+>", "", texto)
     texto = re.sub(r"[_*~#><]", "", texto)
 
-    # 5️⃣ Corrige pontuação e espaços
-    texto = re.sub(r"\s+", " ", texto).strip()
-    texto = re.sub(r"\s+([.,!?])", r"\1", texto)
-
-    # 6️⃣ Corrige padrões conhecidos
+    # 7️⃣ Corrige padrões conhecidos de moeda grudada
     texto = texto.replace("R2", "R$ 2").replace("R3", "R$ 3").replace("R4", "R$ 4")
     texto = texto.replace("R5", "R$ 5").replace("R6", "R$ 6").replace("R7", "R$ 7")
     texto = texto.replace("R8", "R$ 8").replace("R9", "R$ 9").replace("R1", "R$ 1")
+
+    # 8️⃣ Final: remove espaços excessivos e corrige pontuação (revertendo a quebra do ponto 3)
+    texto = re.sub(r"\s+", " ", texto).strip()
+    texto = re.sub(r"\s+([.,!?:;])", r"\1", texto)
+    
+    # 9️⃣ Garante espaço após ponto final
+    texto = re.sub(r"\.([A-Z])", r". \1", texto)
 
     return texto
