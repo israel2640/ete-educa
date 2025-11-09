@@ -270,6 +270,7 @@ def explain_like_coach(question_text: str, materia: str) -> str:
         "Use emojis e fale como se estivesse conversando com o aluno na sala. "
         "Evite termos difíceis e equações longas. "
         "Mostre o raciocínio com calma e encoraje o aluno no final. "
+        "IMPORTANTE: NUNCA use o símbolo 'R$'. Sempre escreva 'reais' (ex: '5 reais').\n\n"
         "Sempre divida a resposta em três partes:\n\n"
         "💡 O que a questão quer dizer — explique o que o problema está pedindo, em linguagem do aluno.\n"
         "🪄 Como resolver — mostre o passo a passo de forma simples e divertida.\n"
@@ -304,9 +305,9 @@ def ask_quick_question(pergunta: str) -> str:
 def limpar_texto_pergunta(texto: str) -> str:
     """
     Corrige textos bugados vindos da IA:
-    - Normaliza caracteres Unicode.
-    - Corrige padrões monetários.
-    - Remove ruído de letras soltas (g, u, n, etc.).
+    - CONVERTE 'R$' e 'R15' para 'reais'.
+    - Remove ruído de letras soltas.
+    - Separa texto grudado (ex: 5,00porquilo).
     """
 
     if not texto:
@@ -316,39 +317,27 @@ def limpar_texto_pergunta(texto: str) -> str:
     texto = html.unescape(texto)
     texto = unicodedata.normalize('NFKC', texto)
     
-    # 2️⃣ CORREÇÃO CRÍTICA 1: Remove ruído de caracteres minúsculos soltos.
-    # Ex: "R15 , g anh o u R3" -> remove " , g ", " u "
-    # O padrão (\s[a-z]\s) busca uma letra minúscula isolada entre espaços.
-    texto = re.sub(r'[\s.,;!?:]{1}[a-z][\s.,;!?:]{1}', ' ', texto) 
+    # 2️⃣ CORREÇÃO CRÍTICA 1: Converte R$ para 'reais'
+    # "R$ 5" ou "R$5" -> " 5 reais"
+    texto = re.sub(r"R\$\s*([\d,.]+)", r" \1 reais", texto)
     
-    # 3️⃣ Garante que o símbolo de moeda esteja correto (R$ X)
-    texto = texto.replace("R$", "R$ ")
-    texto = re.sub(r"R\s*(\d)", r"R$ \1", texto)  # R 6 → R$ 6
-    texto = re.sub(r"R\$([^\s])", r"R$ \1", texto) # Garante espaço após R$
+    # 3️⃣ CORREÇÃO CRÍTICA 2: Converte R15, R3, R5,00 para 'reais'
+    # "R15" -> "15 reais"
+    # "R5,00" -> "5,00 reais"
+    texto = re.sub(r"R([\d,.]+)", r" \1 reais", texto)
 
-    # 4️⃣ Corrige padrões monetários e pontos/vírgulas soltas
-    # Remove vírgulas/pontos que não estão seguidas de um dígito (como no R15, na imagem)
-    texto = re.sub(r"([.,])\s*([^\d])", r" \2", texto) 
+    # 4️⃣ Remove ruído de caracteres minúsculos soltos (o 'g anh o u')
+    texto = re.sub(r'[\s.,;!?:]{1}[a-z][\s.,;!?:]{1}', ' ', texto) 
 
-    # 5️⃣ Adiciona espaço após pontuações grudadas (sinais de moeda, ponto final)
-    # Isso transforma "R$87.Sabe" em "R$ 87. Sabe"
+    # 5️⃣ Adiciona espaço após pontuações grudadas
     texto = re.sub(r'([.,;!?:])([A-Za-z])', r'\1 \2', texto) 
     
-    # 6️⃣ Corrige números grudados em palavras
-    texto = re.sub(r"(\d)([A-Za-z])", r"\1 \2", texto)  # 24cada → 24 cada
-    texto = re.sub(r"([A-Za-z])(\d)", r"\1 \2", texto)  # Rde2 → R de 2
-    texto = re.sub(r"(\d[,.]\d{2})([A-Za-z])", r"\1 \2", texto)  # 6,00de → 6,00 de
+    # 6️⃣ Corrige números/palavras grudados (O "5,00porquilo")
+    texto = re.sub(r"(\d)([A-Za-z])", r"\1 \2", texto)  
+    texto = re.sub(r"([A-Za-z])(\d)", r"\1 \2", texto)  
+    texto = re.sub(r"(\d[,.]\d{2})([A-Za-z])", r"\1 \2", texto)
 
-    # 7️⃣ Remove tags, underscores, etc.
-    texto = re.sub(r"<[^>]+>", "", texto)
-    texto = re.sub(r"[_*~#><]", "", texto)
-
-    # 8️⃣ Corrige padrões conhecidos de moeda grudada
-    texto = texto.replace("R2", "R$ 2").replace("R3", "R$ 3").replace("R4", "R$ 4")
-    texto = texto.replace("R5", "R$ 5").replace("R6", "R$ 6").replace("R7", "R$ 7")
-    texto = texto.replace("R8", "R$ 8").replace("R9", "R$ 9").replace("R1", "R$ 1")
-
-    # 9️⃣ Final: remove espaços excessivos e corrige pontuação
+    # 7️⃣ Final: remove espaços excessivos e corrige pontuação
     texto = re.sub(r"\s+", " ", texto).strip()
     texto = re.sub(r"\s+([.,!?:;])", r"\1", texto)
     texto = re.sub(r"\.([A-Z])", r". \1", texto)
