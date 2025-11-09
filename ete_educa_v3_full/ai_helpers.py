@@ -272,7 +272,11 @@ Questão:
 
 Explique no estilo de professora divertida, com linguagem popular e exemplos práticos.
 """
-    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1)
+    # 1. Armazena a resposta bruta da API
+    resposta_bruta = _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1)
+
+    # 2. Limpa o texto antes de retornar
+    return limpar_texto_pergunta(resposta_bruta)
 
 def ask_quick_question(pergunta: str) -> str:
     """Responde perguntas rápidas e didáticas."""

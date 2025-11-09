@@ -229,7 +229,12 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
 
             # 'explicacao_divertida' É DEFINIDA AQUI
             explicacao_original = q_data.get("explicacao", "Sem explicação disponível.")
-            explicacao_divertida = explain_like_coach(explicacao_original, materia)
+            
+            # PASSO 1: LIMPA a explicação original antes de enviar para a IA de persona
+            explicacao_limpa = limpar_texto_pergunta(explicacao_original)
+            
+            # PASSO 2: Envia o texto LIMPO para a IA que cria a "persona do coach"
+            explicacao_divertida = explain_like_coach(explicacao_limpa, materia)
 
             st.markdown(f"🧠 {explicacao_divertida}")
             
