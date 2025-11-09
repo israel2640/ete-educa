@@ -225,7 +225,7 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
             else:
                 st.error(f"❌ Você marcou: {resposta_usuario}\nA resposta correta (verificada pelo Python) era: **{correta}**")
 
-            st.subheader("Explicação do Mestre:")
+            st.subheader("Explicação da Professora:")
 
             # 'explicacao_divertida' É DEFINIDA AQUI
             explicacao_original = q_data.get("explicacao", "Sem explicação disponível.")
