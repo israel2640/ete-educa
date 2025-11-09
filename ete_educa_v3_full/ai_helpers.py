@@ -107,21 +107,22 @@ def generate_math_question(materia: str, topico: str) -> dict | None:
         "\n2. Se o Tópico for 'Equações', a pergunta PODE ser uma equação direta."
         "\n3. 🚫 NUNCA use o símbolo 'R$'. Escreva a palavra 'reais' por extenso. (Ex: '5 reais')."
         "\n4. NUNCA COLE PONTUAÇÕES, SÍMBOLOS OU LETRAS UNS NOS OUTROS."
+        "\n5. 🚨 A RESPOSTA CORRETA (calculada pela 'equacao_para_sympy') DEVE ESTAR INCLUÍDA EM UMA DAS 'opcoes'."
         
-        # --- NOVA REGRA CRÍTICA (A SOLUÇÃO) ---
-        "\n5. 🚨 A RESPOSTA CORRETA (calculada pela 'equacao_para_sympy') DEVE ESTAR INCLUÍDA EM UMA DAS 'opcoes'. "
-        "VERIFIQUE SUA PRÓPRIA MATEMÁTICA ANTES DE RESPONDER. ESTA É A REGRA MAIS IMPORTANTE."
-        # --- FIM DO REFORÇO ---
+        # --- NOVO BLOCO DE VARIEDADE ---
+        "\n6. 🚨 VARIEDADE É ESSENCIAL: Para 'Problemas', gere cenários diferentes (divisão de conta, cálculo de média, soma de compras, etc.). NÃO gere apenas problemas de 'troco' ou 'sobra'."
+        # --- FIM DO NOVO BLOCO ---
     )
     
-    # --- PROMPT DE USUÁRIO CORRIGIDO COM "REAIS" ---
+    # --- PROMPT DE USUÁRIO CORRIGIDO COM MÚLTIPLOS EXEMPLOS ---
     user = f"""
 Matéria: {materia}
 Tópico: {topico}
 
 Responda apenas com JSON no formato. Siga o exemplo mais apropriado para o tópico:
 
-EXEMPLO DE "PROBLEMA" (Tópicos como 'Problemas com as Quatro Operações', 'Porcentagem', etc.):
+---
+EXEMPLO 1: "PROBLEMA" (Tópico: Problemas com as Quatro Operações - Subtração)
 {{
   "pergunta": "Uma loja vendeu 15 camisas por 45 reais cada. Desse total, 200 reais foram usados para pagar o aluguel. Quanto sobrou no caixa?",
   "opcoes": ["a) 450 reais", "b) 475 reais", "c) 500 reais", "d) 675 reais"],
@@ -130,7 +131,18 @@ EXEMPLO DE "PROBLEMA" (Tópicos como 'Problemas com as Quatro Operações', 'Por
   "explicacao": "💡 Vamos lá! Primeiro, o total da venda: 15 camisas x 45 reais = 675 reais. Depois, tiramos o aluguel: 675 reais - 200 reais = 475 reais. ✅"
 }}
 
-EXEMPLO DE "EQUAÇÃO DIRETA" (Tópicos como 'Equações Algébricas'):
+---
+EXEMPLO 2: "PROBLEMA" (Tópico: Problemas com as Quatro Operações - Divisão)
+{{
+  "pergunta": "Três amigos foram a uma pizzaria e a conta total foi de 96 reais. Se eles dividiram a conta igualmente, quanto cada um pagou?",
+  "opcoes": ["a) 30 reais", "b) 32 reais", "c) 33 reais", "d) 35 reais"],
+  "equacao_para_sympy": "96 / 3",
+  "variavel_solucao": null,
+  "explicacao": "💡 Simples! É só pegar a conta total (96 reais) e dividir pelo número de amigos (3). 96 / 3 = 32 reais para cada um. ✅"
+}}
+
+---
+EXEMPLO 3: "EQUAÇÃO DIRETA" (Tópico: Equações Algébricas)
 {{
   "pergunta": "Resolva: 2x + 4 = 10",
   "opcoes": ["a) 2", "b) 3", "c) 4", "d) 5"],
@@ -139,27 +151,7 @@ EXEMPLO DE "EQUAÇÃO DIRETA" (Tópicos como 'Equações Algébricas'):
   "explicacao": "💡 Vamos isolar o 'x'! Passamos o 4 subtraindo: 2x = 10 - 4, que dá 2x = 6. Agora, passamos o 2 dividindo: x = 6 / 2. ✅ O resultado é x = 3."
 }}
 """
-    # Usamos gpt-4o-mini aqui, pois o gpt-5-mini falha mais
     return _generate_question(system, user, {"type": "json_object"})
-
-# É CRUCIAL que _generate_question use um modelo bom
-def _generate_question(system_prompt, user_prompt, response_format):
-    json_string = _make_api_call(
-        system_prompt=system_prompt,
-        user_prompt=user_prompt,
-        model="gpt-5-mini", # <--- gpt-4o-mini é MELHOR em seguir regras que gpt-5-mini
-        temperature=1,
-        response_format=response_format,
-    )
-    if json_string.startswith("❌"):
-        print(f"Erro ao gerar questão: {json_string}")
-        return None
-    try:
-        return json.loads(json_string)
-    except json.JSONDecodeError as e:
-        print(f"Erro ao decodificar JSON: {e}")
-        print(f"String recebida: {json_string}")
-        return None
 
 # =====================================================
 # 🔹 Geração de questão de PORTUGUÊS
