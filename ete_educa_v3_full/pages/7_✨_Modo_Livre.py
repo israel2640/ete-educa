@@ -11,7 +11,8 @@ from ai_helpers import (
     get_correct_answer_from_sympy,
     explain_like_coach,      # para explicações divertidas
     ask_quick_question,      # para perguntas do aluno
-    limpar_texto_pergunta  # Importação corrigida
+    limpar_texto_pergunta,  # Importação corrigida
+    generate_speech
 )
 
 st.set_page_config(page_title="Modo Livre — ETE Educa", layout="centered")
@@ -152,9 +153,34 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
         st.divider()
 
     # 🔹 Exibir a pergunta
-    st.markdown(f"**📝 {q_data.get('pergunta', 'Erro ao carregar pergunta.')}**")
+    pergunta_completa = q_data.get('pergunta', 'Erro ao carregar pergunta.')
 
+    # NOVO: Dividir o layout em duas colunas para o texto da pergunta e o botão de áudio
+    col_pergunta, col_audio = st.columns([0.9, 0.1]) # 90% para a pergunta, 10% para o botão
 
+    with col_pergunta:
+        st.markdown(f"**📝 {pergunta_completa}**")
+
+    # NOVO: Botão para gerar e tocar o áudio
+    with col_audio:
+        # O botão '🔊' usa o ícone de som
+        if st.button("🔊", key="audio_button", help="Clique para ouvir a pergunta"): 
+            # 1. Tenta gerar o áudio
+            with st.spinner("Gerando áudio..."):
+                audio_bytes = generate_speech(pergunta_completa)
+            
+            if audio_bytes:
+                # 2. Armazena os bytes na sessão
+                st.session_state.audio_pergunta = audio_bytes
+            else:
+                st.error("❌ Erro ao gerar o áudio. Verifique as configurações da OpenAI.")
+
+    # NOVO: Exibe o player de áudio se o áudio foi gerado
+    if "audio_pergunta" in st.session_state and st.session_state.audio_pergunta:
+         # st.audio exibe o player nativo do navegador e toca automaticamente (autoplay=True)
+         st.audio(st.session_state.audio_pergunta, format='audio/mp3', autoplay=True) 
+
+    # Continuação do seu código original:
     opcoes = q_data.get("opcoes", [])
     if opcoes:
         resposta_usuario = st.radio(
@@ -217,6 +243,8 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
             # --- Inicializa variáveis ---
             if "chat_duvidas" not in st.session_state:
                 st.session_state.chat_duvidas = []
+                if "audio_pergunta" in st.session_state:
+                    st.session_state.audio_pergunta = None
             if "limpar_input" not in st.session_state:
                 st.session_state.limpar_input = False
 

@@ -337,3 +337,27 @@ def limpar_texto_pergunta(texto: str) -> str:
     texto = re.sub(r"\.([A-Z])", r". \1", texto)
 
     return texto
+
+def generate_speech(text_to_speak: str, voice: str = "nova") -> bytes | None:
+    """Gera o áudio usando a API de Text-to-Speech (TTS) da OpenAI."""
+    try:
+        client = _client()
+        
+        # A API de TTS (Text-to-Speech) requer um modelo específico e retorna o áudio diretamente
+        response = client.audio.speech.create(
+            model="tts-1",  # Modelo TTS padrão
+            voice=voice,    # 'nova' (feminina) ou 'alloy' (masculino) são boas opções
+            input=text_to_speak,
+            response_format="mp3" # Formato comum para Streamlit
+        )
+        
+        # O response.iter_bytes() permite ler o conteúdo do áudio em blocos
+        audio_bytes = b"".join(response.iter_bytes())
+        return audio_bytes
+
+    except OpenAIError as e:
+        print(f"Erro TTS da OpenAI: {e.message}")
+        return None
+    except Exception as e:
+        print(f"Erro TTS inesperado: {e}")
+        return None
