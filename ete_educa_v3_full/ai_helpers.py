@@ -104,14 +104,14 @@ def generate_math_question(materia: str, topico: str) -> dict | None:
         
         # --- REFORÇO NO PROMPT DE SISTEMA ---
         "\n\n🚨 REGRAS DE TÓPICO (MUITO IMPORTANTE):"
-        "\n1. Se o Tópico for 'Problemas com as Quatro Operações' (ou similar), a pergunta DEVE ser um 'problema' (word problem) que exija interpretação (ex: 'João comprou...'), e NÃO uma equação direta."
-        "\n2. Se o Tópico for 'Equações', a pergunta PODE ser uma equação direta (ex: 'Resolva: 2x + 4 = 10')."
-        "\n3. USE O SÍMBOLO 'R$' E INSIRA SEMPRE UM ESPAÇO ENTRE 'R$' e o número. (Ex: R$ 51)."
+        "\n1. Se o Tópico for 'Problemas com as Quatro Operações', a pergunta DEVE ser um 'problema' (word problem)."
+        "\n2. Se o Tópico for 'Equações', a pergunta PODE ser uma equação direta."
+        "\n3. 🚫 NUNCA use o símbolo 'R$'. Em vez disso, escreva a palavra 'reais' por extenso. (Ex: '5 reais', '45 reais')."
         "\n4. NUNCA COLE PONTUAÇÕES, SÍMBOLOS OU LETRAS UNS NOS OUTROS."
         # --- FIM DO REFORÇO ---
     )
     
-    # --- PROMPT DE USUÁRIO CORRIGIDO COM EXEMPLO DE 'PROBLEMA' ---
+    # --- PROMPT DE USUÁRIO CORRIGIDO COM "REAIS" ---
     user = f"""
 Matéria: {materia}
 Tópico: {topico}
@@ -120,11 +120,11 @@ Responda apenas com JSON no formato. Siga o exemplo mais apropriado para o tópi
 
 EXEMPLO DE "PROBLEMA" (Tópicos como 'Problemas com as Quatro Operações', 'Porcentagem', etc.):
 {{
-  "pergunta": "Uma loja vendeu 15 camisas por R$ 45,00 cada. Desse total, R$ 200,00 foram usados para pagar o aluguel. Quanto sobrou no caixa?",
-  "opcoes": ["a) R$ 450,00", "b) R$ 475,00", "c) R$ 500,00", "d) R$ 675,00"],
+  "pergunta": "Uma loja vendeu 15 camisas por 45 reais cada. Desse total, 200 reais foram usados para pagar o aluguel. Quanto sobrou no caixa?",
+  "opcoes": ["a) 450 reais", "b) 475 reais", "c) 500 reais", "d) 675 reais"],
   "equacao_para_sympy": "(15 * 45) - 200",
   "variavel_solucao": null,
-  "explicacao": "💡 Vamos lá! Primeiro, calculamos o total da venda: 15 camisas x R$ 45,00 = R$ 675,00. Depois, tiramos o valor do aluguel: R$ 675,00 - R$ 200,00 = R$ 475,00. ✅"
+  "explicacao": "💡 Vamos lá! Primeiro, o total da venda: 15 camisas x 45 reais = 675 reais. Depois, tiramos o aluguel: 675 reais - 200 reais = 475 reais. ✅"
 }}
 
 EXEMPLO DE "EQUAÇÃO DIRETA" (Tópicos como 'Equações Algébricas'):
