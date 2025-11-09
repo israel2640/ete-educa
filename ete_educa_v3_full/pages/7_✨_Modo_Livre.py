@@ -89,6 +89,21 @@ if st.button(f"Gerar Pergunta Inédita sobre {topico}"):
             if "opcoes" in q_data and isinstance(q_data["opcoes"], list):
                 q_data["opcoes"] = [limpar_texto_pergunta(op) for op in q_data["opcoes"]]
 
+            # --- NOVO BLOCO: VERIFICAÇÃO DE INTEGRIDADE (CONTRA RUÍDO) ---
+            pergunta_limpa = q_data.get("pergunta", "").lower()
+            
+            # Padrões que indicam ruído ou formatação quebrada:
+            # 1. Letras minúsculas soltas (o, u, g, n, etc.) com vírgula ou espaço.
+            # 2. Palavras grudadas após o símbolo de Real (ex: R$15.sabe).
+            if re.search(r"r\$\s*\d+\s*[.,]\s*[a-z]", pergunta_limpa) or re.search(r"[\s,][a-z]\s+[a-z]\s+[a-z][\s,]", pergunta_limpa):
+                
+                st.error("❌ Erro de formatação grave detectado (ruído de caracteres ou falha na moeda). A questão foi rejeitada para garantir a qualidade. Tente gerar novamente.")
+                st.session_state.new_question_data = None
+                
+                # RECURSO: O RERUN É CRÍTICO AQUI PARA LIMPAR O ESTADO
+                st.rerun() 
+            
+            
             st.session_state.new_question_data = q_data
 
             # 4) Verifica a resposta

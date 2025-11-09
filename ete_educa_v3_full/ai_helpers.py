@@ -78,7 +78,7 @@ def _generate_question(system_prompt, user_prompt, response_format):
     json_string = _make_api_call(
         system_prompt=system_prompt,
         user_prompt=user_prompt,
-        model="gpt-5-mini",
+        model="gpt-4o-mini",
         temperature=1,
         response_format=response_format,
     )
@@ -101,6 +101,14 @@ def generate_math_question(materia: str, topico: str) -> dict | None:
         "Crie uma pergunta de múltipla escolha com 4 alternativas (a, b, c, d) "
         "e inclua a equação SymPy correspondente, que o Python poderá resolver. "
         "Não inclua o campo 'correta'."
+        
+        # --- NOVO BLOCO DE INSTRUÇÕES CRÍTICAS ---
+        "\n\n🚨 FORMATO DE SAÍDA CRÍTICO PARA A PERGUNTA:"
+        "\n1. USE O SÍMBOLO 'R$' E INSIRA SEMPRE UM ESPAÇO ENTRE 'R$' e o número. (Ex: R$ 51)."
+        "\n2. NUNCA COLE PONTUAÇÕES, SÍMBOLOS OU LETRAS UNS NOS OUTROS. SEMPRE USE ESPAÇOS."
+        "\n3. EVITE O USO DE CARACTERES ISOLADOS, COMO LETRAS MINÚSCULAS SOLTAS ('g', 'u', 'n')."
+        "\n4. A frase DEVE SER CLARA E COESA, em Português padrão do Brasil."
+        
     )
     user = f"""
 Matéria: {materia}
