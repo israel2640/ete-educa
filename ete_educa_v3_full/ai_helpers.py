@@ -100,14 +100,17 @@ def generate_math_question(materia: str, topico: str) -> dict | None:
         "Você é um assistente de IA especialista em criar questões de matemática para o vestibular da ETE. "
         "Crie uma pergunta de múltipla escolha com 4 alternativas (a, b, c, d) "
         "e inclua a equação SymPy correspondente, que o Python poderá resolver. "
-        "Não inclua o campo 'correta'."
         
         # --- REFORÇO NO PROMPT DE SISTEMA ---
         "\n\n🚨 REGRAS DE TÓPICO (MUITO IMPORTANTE):"
         "\n1. Se o Tópico for 'Problemas com as Quatro Operações', a pergunta DEVE ser um 'problema' (word problem)."
         "\n2. Se o Tópico for 'Equações', a pergunta PODE ser uma equação direta."
-        "\n3. 🚫 NUNCA use o símbolo 'R$'. Em vez disso, escreva a palavra 'reais' por extenso. (Ex: '5 reais', '45 reais')."
+        "\n3. 🚫 NUNCA use o símbolo 'R$'. Escreva a palavra 'reais' por extenso. (Ex: '5 reais')."
         "\n4. NUNCA COLE PONTUAÇÕES, SÍMBOLOS OU LETRAS UNS NOS OUTROS."
+        
+        # --- NOVA REGRA CRÍTICA (A SOLUÇÃO) ---
+        "\n5. 🚨 A RESPOSTA CORRETA (calculada pela 'equacao_para_sympy') DEVE ESTAR INCLUÍDA EM UMA DAS 'opcoes'. "
+        "VERIFIQUE SUA PRÓPRIA MATEMÁTICA ANTES DE RESPONDER. ESTA É A REGRA MAIS IMPORTANTE."
         # --- FIM DO REFORÇO ---
     )
     
@@ -136,7 +139,27 @@ EXEMPLO DE "EQUAÇÃO DIRETA" (Tópicos como 'Equações Algébricas'):
   "explicacao": "💡 Vamos isolar o 'x'! Passamos o 4 subtraindo: 2x = 10 - 4, que dá 2x = 6. Agora, passamos o 2 dividindo: x = 6 / 2. ✅ O resultado é x = 3."
 }}
 """
+    # Usamos gpt-4o-mini aqui, pois o gpt-5-mini falha mais
     return _generate_question(system, user, {"type": "json_object"})
+
+# É CRUCIAL que _generate_question use um modelo bom
+def _generate_question(system_prompt, user_prompt, response_format):
+    json_string = _make_api_call(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        model="gpt-4o-mini", # <--- gpt-4o-mini é MELHOR em seguir regras que gpt-5-mini
+        temperature=1,
+        response_format=response_format,
+    )
+    if json_string.startswith("❌"):
+        print(f"Erro ao gerar questão: {json_string}")
+        return None
+    try:
+        return json.loads(json_string)
+    except json.JSONDecodeError as e:
+        print(f"Erro ao decodificar JSON: {e}")
+        print(f"String recebida: {json_string}")
+        return None
 
 # =====================================================
 # 🔹 Geração de questão de PORTUGUÊS
