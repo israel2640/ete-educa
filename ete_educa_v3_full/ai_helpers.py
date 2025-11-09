@@ -343,19 +343,24 @@ def limpar_texto_pergunta(texto: str) -> str:
     return texto
 
 def generate_speech(text_to_speak: str, voice: str = "nova") -> bytes | None:
-    """Gera o áudio usando a API de Text-to-Speech (TTS) da OpenAI."""
+    """
+    Gera o áudio usando a API de Text-to-Speech (TTS) da OpenAI.
+    A voz 'nova' é a melhor para o Português do Brasil.
+    """
     try:
+        # A instrução SSML (Speech Synthesis Markup Language) é a forma
+        # mais robusta de forçar o sotaque e a pronúncia correta no TTS.
+        ssml_input = f'<speak><lang xml:lang="pt-BR">{text_to_speak}</lang></speak>'
+
         client = _client()
         
-        # A API de TTS (Text-to-Speech) requer um modelo específico e retorna o áudio diretamente
         response = client.audio.speech.create(
-            model="tts-1",  # Modelo TTS padrão
-            voice=voice,    # 'nova' (feminina) ou 'alloy' (masculino) são boas opções
-            input=text_to_speak,
-            response_format="mp3" # Formato comum para Streamlit
+            model="tts-1",  
+            voice=voice,    # Mantemos 'nova', que tem uma voz feminina com sotaque pt-BR
+            input=ssml_input, # USAMOS O SSML AQUI
+            response_format="mp3" 
         )
         
-        # O response.iter_bytes() permite ler o conteúdo do áudio em blocos
         audio_bytes = b"".join(response.iter_bytes())
         return audio_bytes
 
