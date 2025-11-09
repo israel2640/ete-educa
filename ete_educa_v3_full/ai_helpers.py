@@ -93,7 +93,7 @@ def _generate_question(system_prompt, user_prompt, response_format):
         return None
 
 # =====================================================
-# 🔹 Geração de questão de MATEMÁTICA
+# 🔹 Geração de questão de MATEMÁTICA (CORRIGIDA)
 # =====================================================
 def generate_math_question(materia: str, topico: str) -> dict | None:
     system = (
@@ -102,25 +102,38 @@ def generate_math_question(materia: str, topico: str) -> dict | None:
         "e inclua a equação SymPy correspondente, que o Python poderá resolver. "
         "Não inclua o campo 'correta'."
         
-        # --- NOVO BLOCO DE INSTRUÇÕES CRÍTICAS ---
-        "\n\n🚨 FORMATO DE SAÍDA CRÍTICO PARA A PERGUNTA:"
-        "\n1. USE O SÍMBOLO 'R$' E INSIRA SEMPRE UM ESPAÇO ENTRE 'R$' e o número. (Ex: R$ 51)."
-        "\n2. NUNCA COLE PONTUAÇÕES, SÍMBOLOS OU LETRAS UNS NOS OUTROS. SEMPRE USE ESPAÇOS."
-        "\n3. EVITE O USO DE CARACTERES ISOLADOS, COMO LETRAS MINÚSCULAS SOLTAS ('g', 'u', 'n')."
-        "\n4. A frase DEVE SER CLARA E COESA, em Português padrão do Brasil."
-        
+        # --- REFORÇO NO PROMPT DE SISTEMA ---
+        "\n\n🚨 REGRAS DE TÓPICO (MUITO IMPORTANTE):"
+        "\n1. Se o Tópico for 'Problemas com as Quatro Operações' (ou similar), a pergunta DEVE ser um 'problema' (word problem) que exija interpretação (ex: 'João comprou...'), e NÃO uma equação direta."
+        "\n2. Se o Tópico for 'Equações', a pergunta PODE ser uma equação direta (ex: 'Resolva: 2x + 4 = 10')."
+        "\n3. USE O SÍMBOLO 'R$' E INSIRA SEMPRE UM ESPAÇO ENTRE 'R$' e o número. (Ex: R$ 51)."
+        "\n4. NUNCA COLE PONTUAÇÕES, SÍMBOLOS OU LETRAS UNS NOS OUTROS."
+        # --- FIM DO REFORÇO ---
     )
+    
+    # --- PROMPT DE USUÁRIO CORRIGIDO COM EXEMPLO DE 'PROBLEMA' ---
     user = f"""
 Matéria: {materia}
 Tópico: {topico}
 
-Responda apenas com JSON no formato:
+Responda apenas com JSON no formato. Siga o exemplo mais apropriado para o tópico:
+
+EXEMPLO DE "PROBLEMA" (Tópicos como 'Problemas com as Quatro Operações', 'Porcentagem', etc.):
+{{
+  "pergunta": "Uma loja vendeu 15 camisas por R$ 45,00 cada. Desse total, R$ 200,00 foram usados para pagar o aluguel. Quanto sobrou no caixa?",
+  "opcoes": ["a) R$ 450,00", "b) R$ 475,00", "c) R$ 500,00", "d) R$ 675,00"],
+  "equacao_para_sympy": "(15 * 45) - 200",
+  "variavel_solucao": null,
+  "explicacao": "💡 Vamos lá! Primeiro, calculamos o total da venda: 15 camisas x R$ 45,00 = R$ 675,00. Depois, tiramos o valor do aluguel: R$ 675,00 - R$ 200,00 = R$ 475,00. ✅"
+}}
+
+EXEMPLO DE "EQUAÇÃO DIRETA" (Tópicos como 'Equações Algébricas'):
 {{
   "pergunta": "Resolva: 2x + 4 = 10",
   "opcoes": ["a) 2", "b) 3", "c) 4", "d) 5"],
   "equacao_para_sympy": "Eq(2*x + 4, 10)",
   "variavel_solucao": "x",
-  "explicacao": "💡 Vamos resolver passo a passo..."
+  "explicacao": "💡 Vamos isolar o 'x'! Passamos o 4 subtraindo: 2x = 10 - 4, que dá 2x = 6. Agora, passamos o 2 dividindo: x = 6 / 2. ✅ O resultado é x = 3."
 }}
 """
     return _generate_question(system, user, {"type": "json_object"})
