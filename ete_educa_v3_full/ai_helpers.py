@@ -78,7 +78,7 @@ def _generate_question(system_prompt, user_prompt, response_format):
     json_string = _make_api_call(
         system_prompt=system_prompt,
         user_prompt=user_prompt,
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         temperature=1,
         response_format=response_format,
     )
