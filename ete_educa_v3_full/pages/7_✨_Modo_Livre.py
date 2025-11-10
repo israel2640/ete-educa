@@ -11,8 +11,8 @@ from ai_helpers import (
     get_correct_answer_from_sympy,
     explain_like_coach,      # para explicações divertidas
     ask_quick_question,      # para perguntas do aluno
-    limpar_texto_pergunta,  # Importação corrigida
-    generate_speech
+    limpar_texto_pergunta,   # Importação corrigida
+    generate_speech          # Importação do áudio
 )
 
 st.set_page_config(page_title="Modo Livre — ETE Educa", layout="centered")
@@ -54,7 +54,6 @@ if "start_time" not in st.session_state:
 if "elapsed_time_seconds" not in st.session_state:
     st.session_state.elapsed_time_seconds = None
 
-
 materia = st.radio("Escolha a matéria:", ["Português", "Matemática"], horizontal=True)
 if materia == "Português":
     topico = st.selectbox("Escolha um tópico do edital:", topicos_portugues)
@@ -69,6 +68,11 @@ if st.button(f"Gerar Pergunta Inédita sobre {topico}"):
     st.session_state.start_time = None
     st.session_state.elapsed_time_seconds = None
     st.session_state.chat_duvidas = [] # Reseta o chat anterior
+
+    # 🟢 CORREÇÃO: Limpa o áudio anterior
+    if "audio_pergunta" in st.session_state:
+        st.session_state.audio_pergunta = None 
+    # -------------------------------------
 
     with st.spinner(f"A IA está criando uma questão sobre {topico}..."):
 
@@ -94,16 +98,12 @@ if st.button(f"Gerar Pergunta Inédita sobre {topico}"):
             pergunta_limpa = q_data.get("pergunta", "").lower()
             
             # Padrões que indicam ruído ou formatação quebrada:
-            # 1. Letras minúsculas soltas (o, u, g, n, etc.) com vírgula ou espaço.
-            # 2. Palavras grudadas após o símbolo de Real (ex: R$15.sabe).
             if re.search(r"r\$\s*\d+\s*[.,]\s*[a-z]", pergunta_limpa) or re.search(r"[\s,][a-z]\s+[a-z]\s+[a-z][\s,]", pergunta_limpa):
                 
-                st.error("❌ Erro de formatação grave detectado (ruído de caracteres ou falha na moeda). A questão foi rejeitada para garantir a qualidade. Tente gerar novamente.")
+                st.error("❌ Erro de formatação grave detectado (ruído de caracteres). A questão foi rejeitada. Tente gerar novamente.")
                 st.session_state.new_question_data = None
-                
-                # RECURSO: O RERUN É CRÍTICO AQUI PARA LIMPAR O ESTADO
                 st.rerun() 
-            
+            # --- FIM DO NOVO BLOCO ---
             
             st.session_state.new_question_data = q_data
 
@@ -119,15 +119,23 @@ if st.button(f"Gerar Pergunta Inédita sobre {topico}"):
                         st.session_state.new_question_data = None
             else:
                 # Português: pega a correta vinda da IA
-                correta_ia = q_data.get("correta")
+                correta_ia_bruta = q_data.get("correta") 
+
+                # 🟢 CORREÇÃO: Limpa o gabarito de Português (Bug c vs c)
+                if correta_ia_bruta:
+                    correta_ia = limpar_texto_pergunta(correta_ia_bruta)
+                else:
+                    correta_ia = None 
+                
                 if not correta_ia: # Tenta inferir se a IA esqueceu
                     exp = q_data.get("explicacao", "").lower()
-                    for opcao in q_data.get("opcoes", []):
+                    for opcao in q_data.get("opcoes", []): # Opções já estão limpas
                         if isinstance(opcao, str) and ")" in opcao:
                             corpo = opcao.lower().split(")", 1)[1].strip()
                             if corpo and corpo in exp:
-                                correta_ia = opcao
+                                correta_ia = opcao 
                                 break
+                
                 if correta_ia:
                     st.session_state.correct_answer_verified = correta_ia
                     st.session_state.start_time = time.time() # Inicia o timer
@@ -152,35 +160,31 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
         st.markdown(q_data["texto"])
         st.divider()
 
-    # 🔹 Exibir a pergunta
+    # 🔹 Exibir a pergunta - NOVO LAYOUT COM ÁUDIO
     pergunta_completa = q_data.get('pergunta', 'Erro ao carregar pergunta.')
 
-    # NOVO: Dividir o layout em duas colunas para o texto da pergunta e o botão de áudio
-    col_pergunta, col_audio = st.columns([0.9, 0.1]) # 90% para a pergunta, 10% para o botão
+    # Dividir o layout em duas colunas
+    col_pergunta, col_audio = st.columns([0.9, 0.1]) # 90% para pergunta, 10% para áudio
 
     with col_pergunta:
         st.markdown(f"**📝 {pergunta_completa}**")
 
-    # NOVO: Botão para gerar e tocar o áudio
+    # Botão para gerar e tocar o áudio
     with col_audio:
-        # O botão '🔊' usa o ícone de som
         if st.button("🔊", key="audio_button", help="Clique para ouvir a pergunta"): 
-            # 1. Tenta gerar o áudio
             with st.spinner("Gerando áudio..."):
                 audio_bytes = generate_speech(pergunta_completa)
             
             if audio_bytes:
-                # 2. Armazena os bytes na sessão
                 st.session_state.audio_pergunta = audio_bytes
             else:
-                st.error("❌ Erro ao gerar o áudio. Verifique as configurações da OpenAI.")
+                st.error("❌ Erro ao gerar o áudio.")
 
-    # NOVO: Exibe o player de áudio se o áudio foi gerado
+    # Exibe o player de áudio (se existir na sessão)
     if "audio_pergunta" in st.session_state and st.session_state.audio_pergunta:
-         # st.audio exibe o player nativo do navegador e toca automaticamente (autoplay=True)
-         st.audio(st.session_state.audio_pergunta, format='audio/mp3', autoplay=True) 
+         st.audio(st.session_state.audio_pergunta, format='audio/mp3', autoplay=True)
+    # --- FIM DO BLOCO DE ÁUDIO ---
 
-    # Continuação do seu código original:
     opcoes = q_data.get("opcoes", [])
     if opcoes:
         resposta_usuario = st.radio(
@@ -227,20 +231,16 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
 
             st.subheader("Explicação da Professora:")
 
-            # 'explicacao_divertida' É DEFINIDA AQUI
+            # 🟢 CORREÇÃO: Limpa o 'explicacao_original' antes de enviar para o 'coach'
             explicacao_original = q_data.get("explicacao", "Sem explicação disponível.")
-            
-            # PASSO 1: LIMPA a explicação original antes de enviar para a IA de persona
             explicacao_limpa = limpar_texto_pergunta(explicacao_original)
-            
-            # PASSO 2: Envia o texto LIMPO para a IA que cria a "persona do coach"
             explicacao_divertida = explain_like_coach(explicacao_limpa, materia)
 
             st.markdown(f"🧠 {explicacao_divertida}")
             
             
             # ==========================================================
-            # 🔹 CORREÇÃO: TODO O BLOCO DE CHAT FOI MOVIDO PARA CÁ
+            # 🔹 BLOCO DE CHAT (Sem mudanças)
             # ==========================================================
             
             st.markdown("💬 **Tem alguma dúvida sobre essa explicação?**")
@@ -248,8 +248,6 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
             # --- Inicializa variáveis ---
             if "chat_duvidas" not in st.session_state:
                 st.session_state.chat_duvidas = []
-                if "audio_pergunta" in st.session_state:
-                    st.session_state.audio_pergunta = None
             if "limpar_input" not in st.session_state:
                 st.session_state.limpar_input = False
 
@@ -326,6 +324,3 @@ if st.session_state.new_question_data and st.session_state.correct_answer_verifi
                     st.rerun()
 
             st.caption("💬 O chat fica salvo enquanto você estiver nesta sessão 👩‍🏫")
-            # ==========================================================
-            # 🔹 FIM DO BLOCO DE CHAT MOVIDO
-            # ==========================================================
