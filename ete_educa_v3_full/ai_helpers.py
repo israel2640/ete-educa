@@ -55,7 +55,6 @@ def _make_api_call(system_prompt: str, user_prompt: str, model: str,
             ],
         }
 
-        # Alguns modelos (como gpt-5-mini) não aceitam o parâmetro temperature
         unsupported_temp_models = ["gpt-5-mini", "gpt-5"]
         if model not in unsupported_temp_models:
             call_params["temperature"] = temperature
@@ -72,14 +71,14 @@ def _make_api_call(system_prompt: str, user_prompt: str, model: str,
         return f"❌ Erro inesperado: {e}"
 
 # =====================================================
-# 🔹 Função genérica para gerar JSON
+# 🔹 Função genérica para gerar JSON (Usa gpt-4o-mini)
 # =====================================================
 def _generate_question(system_prompt, user_prompt, response_format):
     json_string = _make_api_call(
         system_prompt=system_prompt,
         user_prompt=user_prompt,
-        model="gpt-5-mini",
-        temperature=1,
+        model="gpt-4o-mini", # Modelo mais confiável para seguir regras
+        temperature=1.0, # Ajustado para float, embora gpt-4o-mini o suporte
         response_format=response_format,
     )
     if json_string.startswith("❌"):
@@ -93,7 +92,7 @@ def _generate_question(system_prompt, user_prompt, response_format):
         return None
 
 # =====================================================
-# 🔹 Geração de questão de MATEMÁTICA (CORRIGIDA)
+# 🔹 Geração de questão de MATEMÁTICA (Com Variedade)
 # =====================================================
 def generate_math_question(materia: str, topico: str) -> dict | None:
     system = (
@@ -108,10 +107,8 @@ def generate_math_question(materia: str, topico: str) -> dict | None:
         "\n3. 🚫 NUNCA use o símbolo 'R$'. Escreva a palavra 'reais' por extenso. (Ex: '5 reais')."
         "\n4. NUNCA COLE PONTUAÇÕES, SÍMBOLOS OU LETRAS UNS NOS OUTROS."
         "\n5. 🚨 A RESPOSTA CORRETA (calculada pela 'equacao_para_sympy') DEVE ESTAR INCLUÍDA EM UMA DAS 'opcoes'."
-        
-        # --- NOVO BLOCO DE VARIEDADE ---
         "\n6. 🚨 VARIEDADE É ESSENCIAL: Para 'Problemas', gere cenários diferentes (divisão de conta, cálculo de média, soma de compras, etc.). NÃO gere apenas problemas de 'troco' ou 'sobra'."
-        # --- FIM DO NOVO BLOCO ---
+        # --- FIM DO REFORÇO ---
     )
     
     # --- PROMPT DE USUÁRIO CORRIGIDO COM MÚLTIPLOS EXEMPLOS ---
@@ -154,16 +151,16 @@ EXEMPLO 3: "EQUAÇÃO DIRETA" (Tópico: Equações Algébricas)
     return _generate_question(system, user, {"type": "json_object"})
 
 # =====================================================
-# 🔹 Geração de questão de PORTUGUÊS
+# 🔹 Geração de questão de PORTUGUÊS (Sem mudanças)
 # =====================================================
 def generate_portuguese_question(materia: str, topico: str) -> dict | None:
     system = (
         "Você é um criador de questões de português para o vestibular da ETE. "
         "Crie questões focadas na **APLICAÇÃO PRÁTICA** das regras (análise de frases, identificação de erros, função em um trecho) "
-        "e **NÃO APENAS em definições teóricas**. " # <-- ADIÇÃO 1
+        "e **NÃO APENAS em definições teóricas**. "
         "A questão deve ter:\n"
         "1️⃣ Um pequeno texto-base (3 a 5 linhas) coerente e claro.\n"
-        "2️⃣ Uma pergunta de **análise ou aplicação** sobre o texto, baseada no tópico fornecido.\n" # <-- ADIÇÃO 2
+        "2️⃣ Uma pergunta de **análise ou aplicação** sobre o texto, baseada no tópico fornecido.\n"
         "3️⃣ Quatro alternativas (a, b, c, d).\n"
         "4️⃣ O campo 'correta' com a alternativa certa.\n"
         "5️⃣ Uma explicação textual mostrando por que essa é a correta.\n"
@@ -189,7 +186,7 @@ Responda apenas com JSON no formato:
     return _generate_question(system, user, {"type": "json_object"})
 
 # =====================================================
-# 🔹 Resolver matemática e verificar resposta correta
+# 🔹 Resolver matemática (Mantida sua versão robusta)
 # =====================================================
 def get_correct_answer_from_sympy(q_data: dict) -> tuple[str | None, str]:
     """
@@ -225,6 +222,8 @@ def get_correct_answer_from_sympy(q_data: dict) -> tuple[str | None, str]:
 
         def extrair_valor(op_text: str) -> float | None:
             txt = op_text.strip().lower()
+            # Remove o 'reais'
+            txt = txt.replace("reais", "").strip()
             txt = re.sub(r"^[a-d]\)\s*", "", txt)
 
             m_misto = re.match(r"^\s*(\d+)\s+(\d+)\s*/\s*(\d+)\s*$", txt)
@@ -259,7 +258,7 @@ def get_correct_answer_from_sympy(q_data: dict) -> tuple[str | None, str]:
 
             if racional and isinstance(racional, sp.Rational):
                 frac_text = f"{int(racional.p)}/{int(racional.q)}"
-                opcao_limpa = re.sub(r"^[a-d]\)\s*", "", opcao.strip()).replace(" ", "")
+                opcao_limpa = re.sub(r"^[a-d]\)\s*", "", opcao.strip()).replace(" ", "").replace("reais", "")
                 if opcao_limpa == frac_text:
                     return opcao, "Cálculo verificado pelo Python (fração exata)."
 
@@ -272,51 +271,8 @@ def get_correct_answer_from_sympy(q_data: dict) -> tuple[str | None, str]:
         return None, f"Erro fatal no SymPy: {e}"
 
 # =====================================================
-# 🔹 Funções de texto (usam modelo mais barato)
+# 🔹 Função de Limpeza de Texto (Versão Definitiva)
 # =====================================================
-def explain_like_coach(question_text: str, materia: str) -> str:
-    """
-    Explica de forma leve, divertida e fácil de entender, como uma professora que ensina alunos de 14 anos do 9º ano.
-    Usa emojis, frases curtas e exemplos do dia a dia (dinheiro, escola, futebol, celular, amigos).
-    """
-    system = (
-        "Você é uma professora alegre, paciente e criativa que ensina alunos do 9º ano de escolas públicas do Recife. "
-        "Explique de um jeito simples, com frases curtas, palavras fáceis e exemplos do dia a dia (como dinheiro, futebol, escola, amigos, celular). "
-        "Use emojis e fale como se estivesse conversando com o aluno na sala. "
-        "Evite termos difíceis e equações longas. "
-        "Mostre o raciocínio com calma e encoraje o aluno no final. "
-        "IMPORTANTE: NUNCA use o símbolo 'R$'. Sempre escreva 'reais' (ex: '5 reais').\n\n"
-        "Sempre divida a resposta em três partes:\n\n"
-        "💡 O que a questão quer dizer — explique o que o problema está pedindo, em linguagem do aluno.\n"
-        "🪄 Como resolver — mostre o passo a passo de forma simples e divertida.\n"
-        "🎯 Dica esperta — termine com uma dica prática ou truque fácil de lembrar depois.\n\n"
-        "Evite fórmulas complicadas. Prefira comparações, exemplos e expressões do cotidiano. "
-        "O tom deve ser empático, leve e positivo, como uma professora que acredita no potencial do aluno."
-    )
-
-    user = f"""
-Matéria: {materia}
-Questão:
-{question_text}
-
-Explique no estilo de professora divertida, com linguagem popular e exemplos práticos.
-"""
-    # 1. Armazena a resposta bruta da API
-    resposta_bruta = _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1)
-
-    # 2. Limpa o texto antes de retornar
-    return limpar_texto_pergunta(resposta_bruta)
-
-def ask_quick_question(pergunta: str) -> str:
-    """Responde perguntas rápidas e didáticas."""
-    system = (
-        "Você é um professor tira-dúvidas da ETE. "
-        "Explique de forma simples, direta e com exemplos. "
-        "Se for um conceito, dê uma frase explicando e um exemplo."
-    )
-    user = f"Dúvida da aluna: {pergunta}"
-    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1)
-
 def limpar_texto_pergunta(texto: str) -> str:
     """
     Corrige textos bugados vindos da IA:
@@ -359,6 +315,59 @@ def limpar_texto_pergunta(texto: str) -> str:
 
     return texto
 
+# =====================================================
+# 🔹 Funções de Explicação (Corrigidas)
+# =====================================================
+def explain_like_coach(question_text: str, materia: str) -> str:
+    """
+    Explica de forma leve, divertida e fácil de entender, como uma professora que ensina alunos de 14 anos do 9º ano.
+    Usa emojis, frases curtas e exemplos do dia a dia (dinheiro, escola, futebol, celular, amigos).
+    """
+    system = (
+        "Você é uma professora alegre, paciente e criativa que ensina alunos do 9º ano de escolas públicas do Recife. "
+        "Explique de um jeito simples, com frases curtas, palavras fáceis e exemplos do dia a dia (como dinheiro, futebol, escola, amigos, celular). "
+        "Use emojis e fale como se estivesse conversando com o aluno na sala. "
+        "Evite termos difíceis e equações longas. "
+        "Mostre o raciocínio com calma e encoraje o aluno no final. "
+        
+        # --- REGRA DE MOEDA ADICIONADA ---
+        "IMPORTANTE: NUNCA use o símbolo 'R$'. Sempre escreva 'reais' (ex: '5 reais').\n\n"
+        # --- FIM DA REGRA ---
+
+        "Sempre divida a resposta em três partes:\n\n"
+        "💡 O que a questão quer dizer — explique o que o problema está pedindo, em linguagem do aluno.\n"
+        "🪄 Como resolver — mostre o passo a passo de forma simples e divertida.\n"
+        "🎯 Dica esperta — termine com uma dica prática ou truque fácil de lembrar depois.\n\n"
+        "Evite fórmulas complicadas. Prefira comparações, exemplos e expressões do cotidiano. "
+        "O tom deve ser empático, leve e positivo, como uma professora que acredita no potencial do aluno."
+    )
+
+    user = f"""
+Matéria: {materia}
+Questão:
+{question_text}
+
+Explique no estilo de professora divertida, com linguagem popular e exemplos práticos.
+"""
+    # 1. Armazena a resposta bruta da API
+    resposta_bruta = _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1)
+    
+    # 2. LIMPA o texto da professora antes de retornar
+    return limpar_texto_pergunta(resposta_bruta)
+
+def ask_quick_question(pergunta: str) -> str:
+    """Responde perguntas rápidas e didáticas."""
+    system = (
+        "Você é um professor tira-dúvidas da ETE. "
+        "Explique de forma simples, direta e com exemplos. "
+        "Se for um conceito, dê uma frase explicando e um exemplo."
+    )
+    user = f"Dúvida da aluna: {pergunta}"
+    return _make_api_call(system_prompt=system, user_prompt=user, model="gpt-5-mini", temperature=1)
+
+# =====================================================
+# 🔹 Função de Áudio (Corrigida com SSML para pt-BR)
+# =====================================================
 def generate_speech(text_to_speak: str, voice: str = "nova") -> bytes | None:
     """
     Gera o áudio usando a API de Text-to-Speech (TTS) da OpenAI, forçando o Português do Brasil (pt-BR).
@@ -367,16 +376,14 @@ def generate_speech(text_to_speak: str, voice: str = "nova") -> bytes | None:
     try:
         # A instrução SSML (Speech Synthesis Markup Language) é a forma
         # mais robusta de FORÇAR o idioma e sotaque no motor TTS.
-        # Envolve a string com as tags <speak> e <lang> para pt-BR.
         ssml_input = f'<speak><lang xml:lang="pt-BR">{text_to_speak}</lang></speak>'
 
-        # Assumindo que _client() retorna o objeto OpenAI (como está configurado no seu código)
-        client = _client() 
+        client = _client()
         
         response = client.audio.speech.create(
             model="tts-1",  
             voice=voice,    # 'nova' é uma voz feminina com sotaque pt-BR
-            input=ssml_input, # Agora USAMOS o texto formatado com SSML
+            input=ssml_input, # USAMOS o texto formatado com SSML
             response_format="mp3" 
         )
         
