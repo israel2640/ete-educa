@@ -93,7 +93,7 @@
         "POR_11",
         "POR_12"
       ],
-      "simulados": 5
+      "simulados": 6
     },
     "matematica": {
       "treinos_ok_list": [],
@@ -111,7 +111,8 @@
       "POR_09",
       "POR_12",
       "POR_08",
-      "POR_11"
+      "POR_11",
+      "MAT_01"
     ],
     "plano_14_dias": {
       "1": true,
