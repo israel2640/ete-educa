@@ -115,7 +115,8 @@
       "MAT_01",
       "MAT_10",
       "MAT_11",
-      "MAT_21"
+      "MAT_21",
+      "MAT_18"
     ],
     "plano_14_dias": {
       "1": true,
