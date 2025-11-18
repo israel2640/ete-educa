@@ -93,7 +93,7 @@
         "POR_11",
         "POR_12"
       ],
-      "simulados": 6
+      "simulados": 7
     },
     "matematica": {
       "treinos_ok_list": [],
@@ -133,6 +133,6 @@
       "13": false,
       "14": false
     },
-    "nivel_atual": "🥉 Bronze"
+    "nivel_atual": "🥈 Prata"
   }
 }
