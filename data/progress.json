@@ -106,7 +106,8 @@
     },
     "reforco": [
       "POR_10",
-      "POR_04"
+      "POR_04",
+      "POR_01"
     ],
     "plano_14_dias": {
       "1": true,
