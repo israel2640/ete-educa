@@ -105,7 +105,8 @@
       "simulados": 0
     },
     "reforco": [
-      "POR_10"
+      "POR_10",
+      "POR_04"
     ],
     "plano_14_dias": {
       "1": true,
