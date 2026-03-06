@@ -11,7 +11,9 @@
         "POR_05"
       ],
       "simulados": 0,
-      "treinos_ok_list": []
+      "treinos_ok_list": [
+        "POR_05"
+      ]
     },
     "matematica": {
       "erros": [],
@@ -24,9 +26,7 @@
       "simulados": 0,
       "treinos_ok_list": []
     },
-    "reforco": [
-      "POR_05"
-    ],
+    "reforco": [],
     "nivel": "Bronze",
     "plano_14_dias": {
       "1": false,
